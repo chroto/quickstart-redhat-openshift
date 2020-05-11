@@ -467,12 +467,12 @@ Parameters:
     Description: EBS volume IOPS to allocate (only applicable if io1 has been selected for GlusterStorageType)
     Type: Number
   GlusterStorageEncrypted:
-    Default: False
+    Default: 'False'
     Description: Enable EBS encryption for Gluster storage volumes
     Type: String
     AllowedValues:
-      - False
-      - True
+      - 'False'
+      - 'True'
   GlusterInstanceType:
     Default: i3.large
     AllowedValues:
@@ -659,7 +659,7 @@ Resources:
       Name: !Sub '${SubDomainPrefix}.${DomainName}'
       ResourceRecords: !GetAtt 'Route53HostedSubdomainZone.NameServers'
       Type: NS
-      TTL: '600'
+      TTL: 600
   Route53WildCard:
     Condition: SetupRoute53
     Type: AWS::Route53::RecordSet

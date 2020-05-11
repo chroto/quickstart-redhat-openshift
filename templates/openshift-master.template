@@ -448,12 +448,12 @@ Parameters:
     Description: EBS volume IOPS to allocate (only applicable if io1 has been selected for GlusterStorageType)
     Type: Number
   GlusterStorageEncrypted:
-    Default: False
+    Default: 'False'
     Description: Enable EBS encryption for Gluster storage volumes
     Type: String
     AllowedValues:
-      - False
-      - True
+      - 'False'
+      - 'True'
   AutomationBroker:
     Default: Enabled
     Description: Enable the OpenShift Automation Service Broker
