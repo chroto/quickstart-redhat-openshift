@@ -3,13 +3,17 @@ baseDomain: example.com
 compute:
 - hyperthreading: Enabled
   name: worker
-  platform: {}
-  replicas: 0
+  platform:
+    aws:
+      zones: []
+  replicas: 3
 controlPlane:
   hyperthreading: Enabled
   name: master
-  platform: {}
-  replicas: 1
+  platform:
+    aws:
+      zones: []
+  replicas: 3
 metadata:
   creationTimestamp: null
   name: your_clustername
@@ -21,7 +25,10 @@ networking:
   serviceNetwork:
   - 172.30.0.0/16
 platform:
-  none: {}
+  aws:
+    region: updateme
+    subnets: []
+
 pullSecret: "{ 'UpdateMe': true }"
 sshKey: |
   ssh-rsa {{ yourkey }}

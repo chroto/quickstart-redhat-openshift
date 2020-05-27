@@ -5,11 +5,6 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: Custom Resources
-        Parameters:
-          - StackDirectorArn
-          - KeyGenLambdaArn
-      - Label:
           default: Network Configuration
         Parameters:
           - VPCID
@@ -34,17 +29,7 @@ Metadata:
           default: OpenShift Configuration
         Parameters:
           - OpenshiftContainerPlatformVersion
-          - AWSServiceBroker
-          - HawkularMetrics
           - ClusterName
-          - GlusterFS
-          - GlusterStorageSize
-          - GlusterStorageType
-          - GlusterStorageIops
-          - GlusterStorageEncrypted
-          - GlusterInstanceType
-          - AutomationBroker
-          - ClusterConsole
       - Label:
           default: Red Hat Subscription Information
         Parameters:
@@ -71,28 +56,8 @@ Metadata:
         default: Nodes Instance Type
       OpenshiftContainerPlatformVersion:
         default: Openshift Container Platform Version
-      AWSServiceBroker:
-        default: AWS Service Broker
-      HawkularMetrics:
-        default: Hawkular Metrics
       ClusterName:
         default: Cluster Name
-      GlusterFS:
-        default: GlusterFS
-      GlusterStorageSize:
-        default: Gluster Storage Size
-      GlusterStorageType:
-        default: Gluster EBS volume type
-      GlusterInstanceType:
-        default: Gluster Instance Type
-      GlusterStorageIops:
-        default: Gluster Storage Iops
-      GlusterStorageEncrypted:
-        default: Gluster Storage Encrypted
-      AutomationBroker:
-        default: OpenShift Automation Broker
-      ClusterConsole:
-        default: Enable the cluster console (requires OpenShift 3.11)
 Parameters:
 
   HostedZoneName:
@@ -129,6 +94,7 @@ Parameters:
     Description: ID of private subnet 3 in Availability Zone 3 for the Workload (e.g.,
       subnet-b1f4a2cd)
     Type: String
+
   NumberOfAZs:
     Default: 3
     Description: The number of Availability Zones to be used for the deployment. 3 Availability Zones are needed to avoid a single point of failure when using 3 or more master nodes or etcd nodes.  With less than 3 Availability Zones.
@@ -136,17 +102,18 @@ Parameters:
     AllowedValues:
     - 1
     - 3
+
   NumberOfMaster:
     Default: '3'
     Description: This Deployment requires at least 3 OpenShift Master instances
     Type: String
     AllowedPattern: '^[3579]$|(^[1-9]+[13579]$)'
+
   NumberOfNodes:
     Default: '3'
     Description: The desired capacity for the OpenShift node instances
     Type: Number
-    #OpenShiftMasterELB:
-    #  Type: String
+
   AmiId:
     Description: >-
       OPTIONAL: bring your own AMI. In Enterprise environment, you might
@@ -255,122 +222,40 @@ Parameters:
     ConstraintDescription: Must contain valid instance type
     Description: Type of EC2 instance for the Node instances
     Type: String
-  AWSServiceBroker:
-    Default: Enabled
-    Description: Enable the AWS Service Broker
-    Type: String
-    AllowedValues:
-      - Enabled
-      - Disabled
-  HawkularMetrics:
-    Default: Enabled
-    Description: Enable Hawkular cluster metrics
-    Type: String
-    AllowedValues:
-      - Enabled
-      - Disabled
 
   ClusterName:
     Default: ""
     Description: Custom cluster name for kubernetes.io/cluster/ tags, if left blank will use the stackname suffixed with the region
     Type: String
-  GlusterFS:
-    Default: Disabled
-    Description: Enable GlusterFS storage cluster
-    Type: String
-    AllowedValues:
-      - Enabled
-      - Disabled
-  GlusterStorageSize:
-    Description: Size in GB of the available storage (will create 3x ebs volumes of this size)
-    Type: Number
-    Default: 1000
-  GlusterStorageType:
-    Default: io1
-    Description: EBS volume type to use for storage
-    Type: String
-    AllowedValues:
-      - io1
-      - gp2
-      - st1
-  GlusterStorageIops:
-    Default: 3000
-    Description: EBS volume IOPS to allocate (only applicable if io1 has been selected for GlusterStorageType)
-    Type: Number
-  GlusterStorageEncrypted:
-    Default: 'False'
-    Description: Enable EBS encryption for Gluster storage volumes
-    Type: String
-    AllowedValues:
-      - 'False'
-      - 'True'
-  GlusterInstanceType:
-    Default: i3.large
-    AllowedValues:
-      - i3.large
-      - i3.xlarge
-      - i3.2xlarge
-      - i3.4xlarge
-      - i3.8xlarge
-      - i3.16xlarge
-    ConstraintDescription: Must contain valid instance type
-    Description: Type of EC2 instance for the GlusterFS instances
-    Type: String
-  NumberOfGluster:
-    Default: '3'
-    Description: This Deployment requires a minimum of 3 Gluster instances
-    Type: Number
-  AutomationBroker:
-    Default: Enabled
-    Description: Enable the OpenShift Automation Service Broker
-    Type: String
-    AllowedValues: [ Enabled, Disabled ]
-  ClusterConsole:
-    Default: Enabled
-    Description: Enable the Cluster Console
-    Type: String
-    AllowedValues: [ Enabled, Disabled ]
 
-    #  OpenShiftMasterInternalELB:
-    #    Description: The ELB Name for the Master nodes
-    #    Type: String
-    #
+  AvailabilityZones:
+    Type: String
+
   StackDirectorLambdaArn:
     Type: String
 
   RemoteAccessCIDR:
     Type: String
 
-    #  OpenShiftSecurityGroup:
-    #    Description: ''
-    #    Type: String
-    #
-    #  LoadBalancerHostname:
-    #    Description: ''
-    #    Type: String
-    #
   OpenShiftLogGroup:
     Description: ''
     Type: String
 
-  OpenShiftPasswordSecret:
-    Description: ''
+  HostedZoneID:
     Type: String
 
-    #  OpenShiftMasterInternalELBDNSName:
-    #    Type: String
-    #
-    #  OpenShiftMasterInternalELB:
-    #    Type: String
-    #
-    #  OpenShiftMasterInternalELBTargetGroup:
-    #    Type: String
-    #
-    #  ContainerAccessELB:
-    #    Type: String
-    #
-    #  ContainerAccessELBDNSName:
-    #    Type: String
+  SSLCertificateId:
+    Type: String
+    Description: ''
+  Protocol:
+    Type: String
+    Description: ''
+    AllowedValues:
+      - 'SSL'
+      - 'TCP'
+  ContainerAccessCIDR:
+    Type: String
+
 Mappings:
   #
   # Removing hyphens because Keys need to be alphanumeric in the 2nd level mapping. See RhcosAmiMap
@@ -448,22 +333,44 @@ Mappings:
 
 Resources:
 
-  NetworkStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-network.template.yaml'
-      Parameters:
-        ClusterName: !Ref ClusterName
-        InfrastructureName: !Ref ClusterName
-        VpcId: !Ref VPCID
-        SubnetId: !Ref PublicSubnet1ID
-        HostedZoneName: !Ref HostedZoneName
+
 
   OpenShift4Setup:
     Type: Custom::LambdaDeployCF
     Properties:
       Function: DeployCF
       ServiceToken: !Ref StackDirectorLambdaArn
+      Region: !Ref AWS::Region
+      AvailabilityZones: !Split
+        - ","
+        - !Ref AvailabilityZones
+      Subnets:
+        - !Ref PublicSubnet1ID
+        - !Ref PublicSubnet2ID
+        - !Ref PublicSubnet3ID
+        - !Ref PrivateSubnet1ID
+        - !Ref PrivateSubnet2ID
+        - !Ref PrivateSubnet3ID
+
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-network.template.yaml'
+      Parameters:
+        ClusterName: !Ref ClusterName
+        InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
+        IngressSecurityGroupId: !GetAtt 'SecurityStack.Outputs.IngressSecurityGroupId'
+        SSLCertificateId: !Ref SSLCertificateId
+        Protocol: !Ref Protocol
+        VpcId: !Ref VPCID
+        HostedZoneName: !Ref HostedZoneName
+        HostedZoneId: !Ref HostedZoneID
+        PublicSubnets: !Join
+          - ","
+          - [!Ref PublicSubnet1ID, !Ref PublicSubnet2ID, !Ref PublicSubnet3ID]
+        PrivateSubnets: !Join
+          - ","
+          - [!Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID, !Ref PrivateSubnet3ID]
 
 
   ValidateEvent:
@@ -486,121 +393,27 @@ Resources:
           - "ValidateEvent"
           - "Arn"
 
-  MasterSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+  OpenShiftPasswordSecret:
+    Type: "AWS::SecretsManager::Secret"
     Properties:
-      GroupDescription: Cluster Security Group
-      SecurityGroupIngress:
-      - IpProtocol: icmp
-        FromPort: 0
-        ToPort: 0
-        CidrIp: !Ref VPCCIDR
-      - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
-        CidrIp: !Ref VPCCIDR
-      - IpProtocol: tcp
-        ToPort: 80
-        FromPort: 80
-        CidrIp: !Ref VPCCIDR
-      - IpProtocol: tcp
-        ToPort: 443
-        FromPort: 443
-        CidrIp: !Ref VPCCIDR
-      - IpProtocol: tcp
-        ToPort: 6443
-        FromPort: 6443
-        CidrIp: !Ref VPCCIDR
-      - IpProtocol: tcp
-        FromPort: 22623
-        ToPort: 22623
-        CidrIp: !Ref VPCCIDR
-      - IpProtocol: icmp
-        FromPort: 0
-        ToPort: 0
-        CidrIp: !Ref RemoteAccessCIDR
-      - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
-        CidrIp: !Ref RemoteAccessCIDR
-      - IpProtocol: tcp
-        ToPort: 6443
-        FromPort: 6443
-        CidrIp: !Ref RemoteAccessCIDR
-      - IpProtocol: tcp
-        ToPort: 80
-        FromPort: 80
-        CidrIp: !Ref RemoteAccessCIDR
-      - IpProtocol: tcp
-        ToPort: 443
-        FromPort: 443
-        CidrIp: !Ref RemoteAccessCIDR
-      - IpProtocol: tcp
-        FromPort: 22623
-        ToPort: 22623
-        CidrIp: !Ref RemoteAccessCIDR
-      VpcId: !Ref VPCID
+      SecretString: !GetAtt 'OpenShift4Setup.KubeAdminPassword'
 
-  MasterIngressEtcd:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !GetAtt MasterSecurityGroup.GroupId
-      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
-      Description: etcd
-      FromPort: 2379
-      ToPort: 2380
-      IpProtocol: tcp
-
-  MasterIngressVxlan:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !GetAtt MasterSecurityGroup.GroupId
-      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
-      Description: Vxlan packets
-      FromPort: 4789
-      ToPort: 4789
-      IpProtocol: udp
-
-  MasterIngressInternal:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !GetAtt MasterSecurityGroup.GroupId
-      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
-      Description: Internal cluster communication
-      FromPort: 9000
-      ToPort: 9999
-      IpProtocol: tcp
-
-  MasterIngressKube:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !GetAtt MasterSecurityGroup.GroupId
-      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
-      Description: Kubernetes kubelet, scheduler and controller manager
-      FromPort: 10250
-      ToPort: 10259
-      IpProtocol: tcp
-
-  MasterIngressIngressServices:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !GetAtt MasterSecurityGroup.GroupId
-      SourceSecurityGroupId: !GetAtt MasterSecurityGroup.GroupId
-      Description: Kubernetes ingress services
-      FromPort: 30000
-      ToPort: 32767
-      IpProtocol: tcp
-
-  BootStrapStack:
-    DependsOn: NetworkStack
+  SecurityStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-instance.template.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-security.yaml'
       Parameters:
-        InstanceName: !Sub ${ClusterName}-BOOT
-        InfrastructureName: !Sub ${ClusterName}
-        InstanceType: "i3.large"
-        SubnetId: !Ref PrivateSubnet1ID
+        InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
+        VpcCidr: !Ref VPCCIDR
+        VpcId: !Ref VPCID
+        ContainerAccessCIDR: !Ref ContainerAccessCIDR
+
+  BootStrapStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-bootstrap.yaml'
+      Parameters:
+        InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
         RhcosAmi: !If
           - NoRhcosAmiParameter
           - !FindInMap
@@ -611,26 +424,25 @@ Resources:
               - !Ref AWS::Region
               - Value
           - !Ref AmiId
+
+        AllowedBootstrapSshCidr: !Ref RemoteAccessCIDR
+        PublicSubnet: !Ref PublicSubnet1ID
         BootstrapIgnitionLocation: !Sub ${IgnitionLocation}/${ClusterName}/bootstrap.ign
-        MasterSecurityGroupId: !Ref MasterSecurityGroup
+        VpcId: !Ref VPCID
+        MasterSecurityGroupId: !GetAtt 'SecurityStack.Outputs.MasterSecurityGroupId'
         RegisterNlbIpTargetsLambdaArn: !GetAtt 'NetworkStack.Outputs.RegisterNlbIpTargetsLambda'
-        ApiTargetGroupArn: !GetAtt 'NetworkStack.Outputs.ServiceTargetGroupArn'
-        ServiceTargetGroupArn: !GetAtt 'NetworkStack.Outputs.ApiTargetGroupArn'
-        WebTargetGroupArn: !GetAtt 'NetworkStack.Outputs.WebTargetGroupArn'
-        WebSSLTargetGroupArn: !GetAtt 'NetworkStack.Outputs.WebSSLTargetGroupArn'
-        SSHTargetGroupArn: !GetAtt 'NetworkStack.Outputs.SSHTargetGroupArn'
-        HostedZoneName: !Ref HostedZoneName
-        ControlPlane: "no"
+        ExternalApiTargetGroupArn: !GetAtt 'NetworkStack.Outputs.ExternalApiTargetGroupArn'
+        InternalApiTargetGroupArn: !GetAtt 'NetworkStack.Outputs.InternalApiTargetGroupArn'
+        InternalServiceTargetGroupArn: !GetAtt 'NetworkStack.Outputs.InternalServiceTargetGroupArn'
 
   ControlPlaneStack:
     DependsOn: BootStrapStack
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-instance.template.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-controlplane.yaml'
       Parameters:
-        InstanceName: !Sub ${ClusterName}-AIO
-        InfrastructureName: !Sub ${ClusterName}
-        InstanceType: "m4.xlarge"
+        InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
+        MasterInstanceType: "m4.xlarge"
         RhcosAmi: !If
           - NoRhcosAmiParameter
           - !FindInMap
@@ -641,17 +453,41 @@ Resources:
               - !Ref AWS::Region
               - Value
           - !Ref AmiId
-        BootstrapIgnitionLocation: !Sub ${IgnitionLocation}/${ClusterName}/master.ign
-        SubnetId: !Ref PrivateSubnet1ID
-        MasterSecurityGroupId: !Ref MasterSecurityGroup
+        IgnitionLocation: !Sub ${IgnitionLocation}/${ClusterName}/master.ign
+        MasterSecurityGroupId: !GetAtt 'SecurityStack.Outputs.MasterSecurityGroupId'
         RegisterNlbIpTargetsLambdaArn: !GetAtt 'NetworkStack.Outputs.RegisterNlbIpTargetsLambda'
-        ApiTargetGroupArn: !GetAtt 'NetworkStack.Outputs.ServiceTargetGroupArn'
-        ServiceTargetGroupArn: !GetAtt 'NetworkStack.Outputs.ApiTargetGroupArn'
-        WebTargetGroupArn: !GetAtt 'NetworkStack.Outputs.WebTargetGroupArn'
-        WebSSLTargetGroupArn: !GetAtt 'NetworkStack.Outputs.WebSSLTargetGroupArn'
-        SSHTargetGroupArn: !GetAtt 'NetworkStack.Outputs.SSHTargetGroupArn'
-        HostedZoneName: !Ref HostedZoneName
-        ControlPlane: "yes"
+        ExternalApiTargetGroupArn: !GetAtt 'NetworkStack.Outputs.ExternalApiTargetGroupArn'
+        InternalApiTargetGroupArn: !GetAtt 'NetworkStack.Outputs.InternalApiTargetGroupArn'
+        InternalServiceTargetGroupArn: !GetAtt 'NetworkStack.Outputs.InternalServiceTargetGroupArn'
+        PrivateHostedZoneId: !GetAtt 'NetworkStack.Outputs.PrivateHostedZoneId'
+        PrivateHostedZoneName: !Join [".", [!Ref ClusterName, !Ref HostedZoneName]]
+        Master0Subnet: !Ref PrivateSubnet1ID
+        Master1Subnet: !Ref PrivateSubnet2ID
+        Master2Subnet: !Ref PrivateSubnet3ID
+        MasterInstanceProfileName: !GetAtt 'SecurityStack.Outputs.MasterInstanceProfile'
+
+  WorkerStack:
+    DependsOn: BootStrapStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-worker.yaml'
+      Parameters:
+        InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
+        WorkerInstanceType: "m4.large"
+        RhcosAmi: !If
+          - NoRhcosAmiParameter
+          - !FindInMap
+            - RhcosAmiMap
+            - !Ref OpenshiftContainerPlatformVersion
+            - !FindInMap
+              - RegionDehyphen
+              - !Ref AWS::Region
+              - Value
+          - !Ref AmiId
+        Subnet: !Ref PrivateSubnet1ID
+        WorkerInstanceProfileName: !GetAtt 'SecurityStack.Outputs.WorkerInstanceProfile'
+        #IgnitionLocation: !Sub ${IgnitionLocation}/${ClusterName}/worker.ign
+        WorkerSecurityGroupId: !GetAtt 'SecurityStack.Outputs.MasterSecurityGroupId'
 
 Conditions:
 

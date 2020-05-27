@@ -2,6 +2,10 @@
 # Taskcat
 .taskcat.yml
 .taskcat_overrides.yml
+.taskcat
 taskcat_outputs
 
 # Lambda
+
+.DS_Store
+.idea

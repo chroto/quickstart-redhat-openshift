@@ -13,7 +13,6 @@ import subprocess
 import time
 import json
 
-
 log = logging.getLogger(__name__)
 
 
@@ -22,16 +21,21 @@ def handler(event, context):
     The main Lambda handler
     """
     status = cfnresponse.SUCCESS
+    data = {}
     cluster_info = {
-            'status': 'complete'
-            }
+        'status': 'complete'
+    }
     level = logging.getLevelName(os.getenv('LogLevel'))
     log.setLevel(level)
     log.debug(event)
 
+    subnets = event["ResourceProperties"]["Subnets"]
+    availability_zones = event["ResourceProperties"]["AvailabilityZones"]
     s3_bucket = os.getenv('AuthBucket')
     cluster_name = os.getenv('ClusterName')
     hosted_zone_name = os.getenv('HostedZoneName')
+    openshift_user_access_key = os.getenv('AwsAccessKeyId')
+    openshift_user_secret_access_key = os.getenv('AwsSecretAccessKey')
     openshift_client_base_mirror_url = os.getenv('OpenShiftMirrorURL')
     openshift_version = os.getenv('OpenShiftVersion')
     openshift_client_binary = os.getenv('OpenShiftClientBinary')
@@ -40,14 +44,14 @@ def handler(event, context):
     file_extension = '.tar.gz'
     cluster_data = {"cluster_name": cluster_name,
                     "openshift_version": openshift_version,
-                    "clusters_information": {} }
+                    "clusters_information": {}}
     stack_dict = {}
 
     if not event.get('RequestType') == 'Delete':
         stack_dict = build_stack_dict(cluster_name,
-                                    hosted_zone_name,
-                                    s3_bucket,
-                                    openshift_version)
+                                      hosted_zone_name,
+                                      s3_bucket,
+                                      openshift_version)
     if sys.platform == 'darwin':
         openshift_install_os = '-mac-'
     else:
@@ -62,23 +66,23 @@ def handler(event, context):
         try:
             if event['RequestType'] == 'Delete':
                 pass
-#                waiter_array = []
-#                wait_for_state = "stack_delete_complete"
-#                log.info("Deleting all stacks in {} deployment'.format(cluster_name)")
+                #                waiter_array = []
+                #                wait_for_state = "stack_delete_complete"
+                #                log.info("Deleting all stacks in {} deployment'.format(cluster_name)")
                 delete_contents_s3(s3_bucket=s3_bucket)
-##                delete_stack(cluster_name)
-#                waiter_array.append({
-#                    "stack_name": cluster_name,
-#                    "stack_state": wait_for_state })
-#                # TODO: If the stack is in state other than
-#                # 'DELETE_IN_PROGRESS' then the lambda will timeout waiting on
-#                # 'stack_delete_complete' state
-#                wait_for_stack_state(waiter_array)
+            ##                delete_stack(cluster_name)
+            #                waiter_array.append({
+            #                    "stack_name": cluster_name,
+            #                    "stack_state": wait_for_state })
+            #                # TODO: If the stack is in state other than
+            #                # 'DELETE_IN_PROGRESS' then the lambda will timeout waiting on
+            #                # 'stack_delete_complete' state
+            #                wait_for_stack_state(waiter_array)
             elif event['RequestType'] == 'Update':
                 log.info("Update sent, however, this is unsupported at this time.")
                 pass
             else:
-#                cf_client = boto3.client('cloudformation')
+                #                cf_client = boto3.client('cloudformation')
                 cf_params = parse_properties(event['ResourceProperties'])
                 log.info("Delete and Update not detected, proceeding with Create")
 
@@ -100,9 +104,12 @@ def handler(event, context):
                     cluster_name = stack_dict["name"]
                     building_key = os.path.join(cluster_name, "building")
                     local_folder = download_path + cluster_name
-                    generate_ignition_files(openshift_install_binary, download_path,
-                                            cluster_name, ssh_key, pull_secret,
-                                            hosted_zone_name)
+                    data['InfrastructureName'], data['KubeAdminPassword'] = generate_ignition_files(
+                        openshift_install_binary, download_path,
+                        cluster_name, ssh_key, pull_secret,
+                        hosted_zone_name, subnets, availability_zones,
+                        openshift_user_access_key, openshift_user_secret_access_key
+                    )
                     upload_ignition_files_to_s3(local_folder, s3_bucket)
                     save_cfparams_json(cf_params=cf_params,
                                        s3_bucket=s3_bucket,
@@ -111,15 +118,15 @@ def handler(event, context):
                     build_array.append(cf_params)
                     log.debug(build_array)
                     stack_dict["status"] = "building"
-                    add_file_to_s3(s3_bucket=s3_bucket,body="building",key=building_key,
-                                    content_type="text/plain", acl="private")
+                    add_file_to_s3(s3_bucket=s3_bucket, body="building", key=building_key,
+                                   content_type="text/plain", acl="private")
 
             log.info("Complete")
         except Exception:
             logging.error('Unhandled exception', exc_info=True)
             status = cfnresponse.FAILED
         finally:
-            cfnresponse.send(event, context, status, {}, None)
+            cfnresponse.send(event, context, status, data, None)
     else:
         try:
             install_dependencies(openshift_client_mirror_url,
@@ -148,8 +155,8 @@ def parse_properties(properties):
     cf_params = {'Capabilities': ['CAPABILITY_IAM',
                                   'CAPABILITY_AUTO_EXPAND',
                                   'CAPABILITY_NAMED_IAM'],
-                'DisableRollback': True
-    }
+                 'DisableRollback': True
+                 }
     cf_params["Parameters"] = []
     for key, value in properties.items():
         if key == "TemplateURL":
@@ -166,6 +173,7 @@ def parse_properties(properties):
             cf_params["Parameters"].append(temp)
     return cf_params
 
+
 def get_kubeadmin_pass(s3_bucket, cluster_name):
     kubeadmin_file = os.path.join(cluster_name, "auth/kubeadmin-password")
     local_kubeadmin_file = os.path.join("/tmp", cluster_name + "-admin")
@@ -177,6 +185,7 @@ def get_kubeadmin_pass(s3_bucket, cluster_name):
         log.info("Unable to open and read file")
         return "not found"
 
+
 def save_cfparams_json(cf_params, s3_bucket, cluster_name):
     cf_params["StackName"] = cluster_name
     cf_params_json = os.path.join(cluster_name, "cf_params.json")
@@ -186,16 +195,18 @@ def save_cfparams_json(cf_params, s3_bucket, cluster_name):
                    content_type="text/json",
                    acl="private")
 
+
 def build_stack_dict(cluster_name, hosted_zone_name, s3_bucket, openshift_version):
     building_key = os.path.join(cluster_name, "building")
     complete_key = os.path.join(cluster_name, "completed")
     fqdn_cluster_name = cluster_name + "." + hosted_zone_name
     stack_dict = {"name": cluster_name,
-                "ssh_url": "ssh.{}.{}".format(cluster_name, hosted_zone_name),
-                "status": ""
-    }
+                  "ssh_url": "ssh.{}.{}".format(cluster_name, hosted_zone_name),
+                  "status": ""
+                  }
     if openshift_version != "3":
-        stack_dict["console_url"] = "https://console-openshift-console.apps.{}.{}".format(cluster_name, hosted_zone_name)
+        stack_dict["console_url"] = "https://console-openshift-console.apps.{}.{}".format(cluster_name,
+                                                                                          hosted_zone_name)
         stack_dict["api_url"] = "https://api.{}:6443".format(fqdn_cluster_name)
     else:
         stack_dict["console_url"] = "https://{}.{}:8443/console".format(cluster_name, hosted_zone_name)
@@ -208,7 +219,9 @@ def build_stack_dict(cluster_name, hosted_zone_name, s3_bucket, openshift_versio
     log.debug("STACK DICTIONARY: {}".format(stack_dict))
     return stack_dict
 
-def install_dependencies(openshift_client_mirror_url, openshift_install_package, openshift_install_binary, download_path):
+
+def install_dependencies(openshift_client_mirror_url, openshift_install_package, openshift_install_binary,
+                         download_path):
     sha256sum_file = 'sha256sum.txt'
     retries = 1
     url = openshift_client_mirror_url + sha256sum_file
@@ -227,7 +240,8 @@ def install_dependencies(openshift_client_mirror_url, openshift_install_package,
         if os.path.exists(download_path + openshift_install_package):
             # Verify SHA256 hash
             if verify_sha256sum(download_path + openshift_install_package, sha256sum):
-                log.info("OpenShift install client already exists in {}".format(download_path + openshift_install_package))
+                log.info(
+                    "OpenShift install client already exists in {}".format(download_path + openshift_install_package))
                 break
         log.info("Downloading OpenShift install client...")
         url_retreive(url, download_path + openshift_install_package)
@@ -239,6 +253,7 @@ def install_dependencies(openshift_client_mirror_url, openshift_install_package,
         tar = tarfile.open(download_path + openshift_install_package)
         tar.extractall(path=download_path)
         tar.close()
+
 
 def url_retreive(url, download_path):
     log.debug("Downloading from URL: {} to {}".format(url, download_path))
@@ -260,14 +275,15 @@ def parse_sha256sum_file(filename):
     # shasum  filename\nshasum1  filename1\n...
     tmp_dict = dict(item.split("  ") for item in string.split("\n"))
     # Swap keys and values
-    sha256sums = dict((v,k) for k,v in tmp_dict.items())
+    sha256sums = dict((v, k) for k, v in tmp_dict.items())
     return sha256sums
+
 
 def verify_sha256sum(filename, sha256sum):
     sha256_hash = hashlib.sha256()
-    with open(filename,"rb") as file:
+    with open(filename, "rb") as file:
         # Read and update hash string value in blocks of 4K
-        for byte_block in iter(lambda: file.read(4096),b""):
+        for byte_block in iter(lambda: file.read(4096), b""):
             sha256_hash.update(byte_block)
     if sha256_hash.hexdigest() == sha256sum:
         return True
@@ -276,7 +292,9 @@ def verify_sha256sum(filename, sha256sum):
         log.info("Expecting {}".format(sha256sum))
         return False
 
-def generate_ignition_files(openshift_install_binary, download_path, cluster_name, ssh_key, pull_secret, hosted_zone_name):
+
+def generate_ignition_files(openshift_install_binary, download_path, cluster_name, ssh_key, pull_secret,
+                            hosted_zone_name, subnets, availability_zones, aws_access_key_id, aws_secret_access_key):
     assets_directory = download_path + cluster_name
     install_config_file = 'install-config.yaml'
     log.debug("Creating OpenShift assets directory for {}...".format(cluster_name))
@@ -291,6 +309,10 @@ def generate_ignition_files(openshift_install_binary, download_path, cluster_nam
     openshift_install_config['sshKey'] = ssh_key
     openshift_install_config['pullSecret'] = pull_secret
     openshift_install_config['baseDomain'] = hosted_zone_name
+    openshift_install_config['platform']['aws']['subnets'] = subnets
+    openshift_install_config['platform']['aws']['region'] = os.getenv('AWS_REGION')
+    openshift_install_config['controlPlane']['platform']['aws']['zones'] = availability_zones
+    openshift_install_config['compute'][0]['platform']['aws']['zones'] = availability_zones
 
     cluster_install_config_file = os.path.join(assets_directory, install_config_file)
     # Using this to get around the ssh-key multiline issue in yaml
@@ -298,12 +320,37 @@ def generate_ignition_files(openshift_install_binary, download_path, cluster_nam
               open(cluster_install_config_file, 'w'),
               explicit_start=True, default_style='\"',
               width=4096)
-    log.info("Generating manifests for {}...".format(cluster_name))
-    cmd = download_path + openshift_install_binary + " create manifests --dir {}".format(assets_directory)
-    run_process(cmd)
-    log.info("Generating ignition files for {}...".format(cluster_name))
-    cmd = download_path + openshift_install_binary + " create ignition-configs --dir {}".format(assets_directory)
-    run_process(cmd)
+    original_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+    original_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+    session_token = os.getenv('AWS_SESSION_TOKEN')
+    try:
+        os.putenv('AWS_ACCESS_KEY_ID', aws_access_key_id)
+        os.putenv('AWS_SECRET_ACCESS_KEY', aws_secret_access_key)
+        os.putenv('AWS_SESSION_TOKEN', '')
+        log.info("Generating manifests for {}...".format(cluster_name))
+        cmd = download_path + openshift_install_binary + " create manifests --dir {}".format(assets_directory)
+        run_process(cmd)
+        log.info('Deleting Master Machinesets from Manifests')
+        import glob
+        control_plane_manifests = glob.glob(
+            os.path.join(assets_directory, 'openshift', '99_openshift-cluster-api_master-machines-*.yaml')
+        )
+        for manifest in control_plane_manifests:
+            os.remove(manifest)
+        log.info("Generating ignition files for {}...".format(cluster_name))
+        cmd = download_path + openshift_install_binary + " create ignition-configs --dir {}".format(assets_directory)
+        run_process(cmd)
+    finally:
+        os.putenv('AWS_ACCESS_KEY_ID', original_access_key_id)
+        os.putenv('AWS_SECRET_ACCESS_KEY', original_secret_access_key)
+        os.putenv('AWS_SESSION_TOKEN', session_token)
+    with open(os.path.join(assets_directory, 'metadata.json')) as f:
+        metadata = json.load(f)
+        infra_name = metadata['infraID']
+    with open(os.path.join(assets_directory, 'auth', 'kubeadmin-password')) as f:
+        kubeadmin_password = f.read().strip()
+    return infra_name, kubeadmin_password
+
 
 def run_process(cmd):
     try:
@@ -335,12 +382,14 @@ def upload_file_to_s3(s3_path, local_path, s3_bucket):
     except:
         client.upload_file(local_path, s3_bucket, s3_path)
 
+
 def upload_ignition_files_to_s3(local_folder, s3_bucket):
-    files_to_upload = ['auth/kubeconfig', 'auth/kubeadmin-password', 'master.ign', 'bootstrap.ign']
+    files_to_upload = ['auth/kubeconfig', 'auth/kubeadmin-password', 'master.ign', 'worker.ign', 'bootstrap.ign']
     for file in files_to_upload:
         s3_path = os.path.join(os.path.basename(local_folder), file)
         local_path = os.path.join(local_folder, file)
         upload_file_to_s3(s3_path, local_path, s3_bucket)
+
 
 def delete_contents_s3(s3_bucket):
     s3 = boto3.resource('s3')
@@ -360,29 +409,34 @@ def delete_contents_s3(s3_bucket):
     except Exception as e:
         log.error("Failed to delete bucket, unhandled exception {}".format(e))
 
+
 def get_from_s3(s3_bucket, source, destination):
     client = boto3.client('s3')
-    if check_file_s3(s3_bucket,key=source):
+    if check_file_s3(s3_bucket, key=source):
         client.download_file(s3_bucket, source, destination)
+
 
 def add_file_to_s3(s3_bucket, body, key, content_type, acl):
     client = boto3.client('s3')
     client.put_object(Body=body, Bucket=s3_bucket, Key=key,
-                    ContentType=content_type, ACL=acl)
+                      ContentType=content_type, ACL=acl)
+
 
 def delete_s3_file(s3_bucket, file_name):
     client = boto3.client('s3')
     client.delete_object(Bucket=s3_bucket, Key=file_name)
 
-def check_file_s3(s3_bucket,key):
+
+def check_file_s3(s3_bucket, key):
     client = boto3.client('s3')
     try:
         client.head_object(Bucket=s3_bucket, Key=key)
         log.debug("File at location {} found".format(key))
         return True
     except Exception as e:
-        log.debug("File not found at {} and key {}".format(s3_bucket,key))
+        log.debug("File not found at {} and key {}".format(s3_bucket, key))
         return False
+
 
 def cluster_available(url):
     response = False
@@ -397,6 +451,7 @@ def cluster_available(url):
         log.error("Unhandled exception, cluster must not be ready")
     return response
 
+
 def scale_ocp_replicas(s3_bucket, cluster_name, status):
     complete_key = os.path.join(cluster_name, "completed")
     building_key = os.path.join(cluster_name, "building")
@@ -409,8 +464,8 @@ def scale_ocp_replicas(s3_bucket, cluster_name, status):
         # If the scale replicas script ran correctly, the status is now complete
         if status == "building":
             delete_s3_file(s3_bucket, building_key)
-        add_file_to_s3(s3_bucket=s3_bucket,body="completed",key=complete_key,
-                        content_type="text/plain", acl="private")
+        add_file_to_s3(s3_bucket=s3_bucket, body="completed", key=complete_key,
+                       content_type="text/plain", acl="private")
         return True
     except Exception as e:
         log.error(e)
@@ -424,4 +479,3 @@ def deactivate_event(cluster_name):
     event_name = cluster_name + "-ValidateEvent"
     response = client.disable_rule(Name=event_name)
     log.debug(response)
-

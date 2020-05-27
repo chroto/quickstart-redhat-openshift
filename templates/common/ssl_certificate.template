@@ -56,6 +56,9 @@ Parameters:
       without a prefix. If you specify this you must also specify DomainName and HostedZoneID'
     Type: String
 
+  ClusterName:
+    Type: String
+
 Resources:
 
   ACMCertificateDNS:
@@ -83,6 +86,15 @@ Resources:
               - !Sub '${SubDomainPrefix}.'
               - ''
             - !Ref 'DomainName'
+        - !Join
+          - ''
+          - - '*.apps.'
+            - !Sub '${ClusterName}.'
+            - !If
+              - UseSubdomain
+              - !Sub '${SubDomainPrefix}.'
+              - ''
+            - !Ref 'DomainName'
 
   ACMCertificateEmail:
     Condition: UseEmailForACMValidation
@@ -99,6 +111,15 @@ Resources:
         - !Join
           - ''
           - - '*.'
+            - !If
+              - UseSubdomain
+              - !Sub '${SubDomainPrefix}.'
+              - ''
+            - !Ref 'DomainName'
+        - !Join
+          - ''
+          - - '*.apps.'
+            - !Sub '${ClusterName}.'
             - !If
               - UseSubdomain
               - !Sub '${SubDomainPrefix}.'
