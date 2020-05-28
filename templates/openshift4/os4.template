@@ -360,7 +360,7 @@ Resources:
   NetworkStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-network.template.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-network.template'
       Parameters:
         ClusterName: !Ref ClusterName
         InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
@@ -386,7 +386,7 @@ Resources:
   SecurityStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-security.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-security'
       Parameters:
         InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
         VpcCidr: !Ref VPCCIDR
@@ -402,7 +402,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: IsBootstrapEnabled
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-bootstrap.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-bootstrap'
       Parameters:
         InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
         Enabled: !Ref EnableBootstrap
@@ -435,7 +435,7 @@ Resources:
     DependsOn: BootStrapStack
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-controlplane.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-controlplane'
       Parameters:
         InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
         MasterInstanceType: !Ref MasterInstanceType
@@ -468,7 +468,7 @@ Resources:
     DependsOn: BootStrapStack
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-worker.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4-worker.template'
       Parameters:
         InfrastructureName: !GetAtt 'OpenShift4Setup.InfrastructureName'
         WorkerInstanceType: !Ref NodesInstanceType

@@ -676,7 +676,7 @@ Resources:
   CustomLambdaStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/common/custom_lambda.template.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/common/custom_lambda.template'
       Parameters:
         SSHKey: !Ref SSHKey
         OpenshiftContainerPlatformVersion: !Ref OpenshiftContainerPlatformVersion
@@ -717,7 +717,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: OS4
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4.template.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4.template'
       Parameters:
         # CloudFormation Meta
         QSS3BucketName: !Ref 'QSS3BucketName'
@@ -808,7 +808,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: OS3
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift3/os3.template.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift3/os3.template'
       Parameters:
         # CloudFormation Meta
         QSS3BucketName: !Ref 'QSS3BucketName'
