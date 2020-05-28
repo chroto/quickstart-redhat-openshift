@@ -4,7 +4,7 @@
         "ParameterValue": "$[taskcat_genaz_3]"
     },
     {
-        "ParameterKey": "KeyPairName",
+        "ParameterKey": "SSHKey",
         "ParameterValue": "override"
     },
     {
@@ -12,20 +12,12 @@
         "ParameterValue": "3"
     },
     {
-        "ParameterKey": "OpenShiftAdminPassword",
-        "ParameterValue": "$[taskcat_genpass_16]"
-    },
-    {
-        "ParameterKey": "RedhatSubscriptionPassword",
+        "ParameterKey": "PullSecret",
         "ParameterValue": "override"
     },
     {
-        "ParameterKey": "RedhatSubscriptionUserName",
-        "ParameterValue": "override"
-    },
-    {
-        "ParameterKey": "RedhatSubscriptionPoolID",
-        "ParameterValue": "override"
+        "ParameterValue": "4.3",
+        "ParameterKey": "OpenshiftContainerPlatformVersion"
     },
     {
         "ParameterKey": "ContainerAccessCIDR",
@@ -42,13 +34,6 @@
     {
         "ParameterKey": "QSS3BucketName",
         "ParameterValue": "$[taskcat_autobucket]"
-    },
-    {
-        "ParameterKey": "GlusterFS",
-        "ParameterValue": "Enabled"
-    },
-    {
-        "ParameterKey": "AnsibleFromGit",
-        "ParameterValue": "True"
     }
+
 ]

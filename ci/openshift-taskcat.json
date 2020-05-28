@@ -4,16 +4,12 @@
         "ParameterValue": "$[taskcat_genaz_3]"
     },
     {
-        "ParameterKey": "KeyPairName",
+        "ParameterKey": "SSHKey",
         "ParameterValue": "override"
     },
     {
         "ParameterKey": "NumberOfNodes",
         "ParameterValue": "3"
-    },
-    {
-        "ParameterKey": "OpenShiftAdminPassword",
-        "ParameterValue": "$[taskcat_genpass_16]"
     },
     {
         "ParameterKey": "DomainName",
@@ -24,7 +20,7 @@
         "ParameterValue": "override"
     },
     {
-        "ParameterKey": "RedhatPullSecret",
+        "ParameterKey": "PullSecret",
         "ParameterValue": "override"
     },
     {
