@@ -46,5 +46,5 @@ venv:
 # templates/aws-ocp-master.template.yaml as env variables
 run_lambda_create_cf: venv
 	${VENV_ACTIVATE} && \
-	cd functions/source/StackDirector/ && \
+	cd functions/source/OpenShift4Installation/ && \
 	python-lambda-local -f lambda_handler lambda_function.py ../../tests/deploy_cf_env_variables.json -t 300

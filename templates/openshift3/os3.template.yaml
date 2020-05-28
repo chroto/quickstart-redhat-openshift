@@ -2,6 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: '(qs-1nltbq5f3) OpenShift+VPC, License: Apache 2.0 (Please do not remove)
   April, 6, 2018'
 Metadata:
+
   AWSAMIRegionMap:
     Filters:
       RHEL76HVM:
@@ -9,8 +10,16 @@ Metadata:
         owner-id: "309956199498"
         architecture: x86_64
         virtualization-type: hvm
+
   AWS::CloudFormation::Interface:
     ParameterGroups:
+      - Label:
+          default: DNS Configuration
+        Parameters:
+          - HostedZoneID
+          - DomainName
+          - SubDomainPrefix
+          - CertificateArn
       - Label:
           default: Custom Resources
         Parameters:
@@ -21,10 +30,18 @@ Metadata:
           default: Network Configuration
         Parameters:
           - VPCID
+          - VPCCIDR
           - PrivateSubnet1ID
           - PrivateSubnet2ID
           - PrivateSubnet3ID
+          - PublicSubnet1ID
+          - PublicSubnet2ID
+          - PublicSubnet3ID
           - AnsibleSubnetID
+          - RemoteAccessCIDR
+          - ContainerAccessCIDR
+          - AvailabilityZones
+          - NumberOfAZs
       - Label:
           default: Amazon EC2 Configuration
         Parameters:
@@ -55,6 +72,10 @@ Metadata:
           - ClusterConsole
           - AnsiblePostInstallScript
           - AnsibleAdditionalEnvironmentVariables
+          - OpenShiftLogGroup
+          - OpenShiftAdminPassword
+          - RegistryBucket
+          - RegistryBucketArn
       - Label:
           default: Red Hat Subscription Information
         Parameters:
@@ -67,6 +88,12 @@ Metadata:
           - QSS3BucketName
           - QSS3KeyPrefix
     ParameterLabels:
+      RegistryBucket:
+        default: Registry Bucket Name
+      RegistryBucketArn:
+        default: Registry Bucket ARN
+      AvailabilityZones:
+        default: Availability Zones
       KeyPairName:
         default: SSH Key Name
       AmiId:
@@ -85,6 +112,16 @@ Metadata:
         default: Red Hat Pool ID
       OpenshiftContainerPlatformVersion:
         default: Openshift Container Platform Version
+      RemoteAccessCIDR:
+        default: Allowed External Access CIDR (OCP UI)
+      ContainerAccessCIDR:
+        default: Allowed External Access CIDR (OCP Router)
+      CertificateArn:
+        default: Certificate ARN
+      VPCCIDR:
+        default: VPC CIDR
+      NumberOfAZs:
+        default: Number of Availability Zones
       MasterInstanceType:
         default: Master Instance Type
       EtcdInstanceType:
@@ -95,6 +132,12 @@ Metadata:
         default: Disk storage size of ansible controller server  
       AWSServiceBroker:
         default: AWS Service Broker
+      DomainName:
+        default: Domain Name
+      HostedZoneID:
+        default: Route 53 Hosted Zone ID
+      SubDomainPrefix:
+        default: Subdomain Prefix
       HawkularMetrics:
         default: Hawkular Metrics
       AnsibleFromGit:
@@ -121,7 +164,6 @@ Metadata:
         default: Ansible post-install script
       AnsibleAdditionalEnvironmentVariables:
         default: Additional ansible environment variables
-
       KeyGenLambdaArn:
         default: Lambda ARN for the KeyGen Custom Resource
       UnSubscribeLambdaArn:
@@ -129,6 +171,25 @@ Metadata:
       CleanupPVLambdaArn:
         default: Lambda ARN for the CleanupPV Custom Resource
 Parameters:
+  NumberOfAZs:
+    Default: 3
+    Description: The number of Availability Zones to be used for the deployment. 3 Availability Zones are needed to avoid a single point of failure when using 3 or more master nodes or etcd nodes.  With less than 3 Availability Zones.
+    Type: Number
+    AllowedValues:
+      - 1
+      - 3
+  RemoteAccessCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: The CIDR IP range that is permitted to access the instances We recommend
+      that you set this value to a trusted IP range.
+    Type: String
+  ContainerAccessCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
+    Description: The CIDR IP range that is permitted to access the instances We recommend
+      that you set this value to a trusted IP range.
+    Type: String
   PrivateSubnet1ID:
     Description: ID of private subnet 1 in Availability Zone 1 for the Workload (e.g.,
       subnet-a0246dcd)
@@ -141,13 +202,17 @@ Parameters:
     Description: ID of private subnet 3 in Availability Zone 3 for the Workload (e.g.,
       subnet-b1f4a2cd)
     Type: String
-  NumberOfAZs:
-    Default: 3
-    Description: The number of Availability Zones to be used for the deployment. 3 Availability Zones are needed to avoid a single point of failure when using 3 or more master nodes or etcd nodes.  With less than 3 Availability Zones.
-    Type: Number
-    AllowedValues:
-    - 1
-    - 3
+  AvailabilityZones:
+    Description: List of Availability Zones to use for the subnets in the VPC. Three
+      Availability Zones are used for this deployment, and the logical order of your
+      selections is preserved.
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+  VPCCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+    Default: 10.0.0.0/16
+    Description: CIDR block for the VPC
+    Type: String
   NumberOfMaster:
     Default: '3'
     Description: This Deployment requires at least 3 OpenShift Master instances
@@ -162,6 +227,11 @@ Parameters:
     Default: '3'
     Description: The desired capacity for the OpenShift node instances
     Type: Number
+  HostedZoneID:
+    Description: 'OPTIONAL: Route 53 Hosted Zone ID to use. If left blank route 53
+      will not be configured and DNS must be setup manually If you specify this you must also specify DomainName'
+    Type: String
+    Default: ""
   OpenShiftMasterELB:
     Type: String
   KeyGenLambdaArn:
@@ -173,6 +243,10 @@ Parameters:
   CleanupPVLambdaArn:
     Type: String
     Description: Lambda ARN for the CleanupPV Custom Resource
+  CertificateArn:
+    Description: 'OPTIONAL: Specify the arn of the certificate that will be presented.'
+    Type: String
+    Default: ""
   AmiId:
     Description: >-
       OPTIONAL: bring your own AMI. In Enterprise environment, you might
@@ -180,6 +254,18 @@ Parameters:
       If the AMI is encrypted, keep in mind that the key policy should allow use of
       the key from AWSServiceRoleForAutoScaling.
       If left blank, we'll use the base RHEL image from your region.
+    Type: String
+    Default: ""
+  SubDomainPrefix:
+    Default: ''
+    Description: 'OPTIONAL: Subdomain to use, if left blank DomainName will be used
+      without a prefix. If you specify this you must also specify DomainName and HostedZoneID'
+    Type: String
+  DomainName:
+    Description: >-
+      OPTIONAL: domain name configured for the cluster, if left blank self signed
+      certificates will be used for TLS and the LoadBalancer's auto-generated hostname
+      will be used for connections from outside the cluster.
     Type: String
     Default: ""
   KeyPairName:
@@ -414,54 +500,83 @@ Parameters:
       Variables must be in the format KEY=VALUE. These are intended to be used by the Ansible post-install script.'
     Default: ''
     Type: String
-  OpenShiftMasterInternalELB:
-    Description: The ELB Name for the Master nodes
-    Type: String
-
-
-  OpenShiftSecurityGroup:
-    Description: ''
-    Type: String
-
-  LoadBalancerHostname:
-    Description: ''
-    Type: String
 
   OpenShiftLogGroup:
-    Description: ''
+    Description: The CloudWatch Log Group to use for bootstrap and installation logging from the initialization process
     Type: String
 
-  OpenShiftPasswordSecret:
-    Description: ''
+  OpenShiftAdminPassword:
+    Description: The OpenShift administrative password to use. This will generate a SecretsManager secret
     Type: String
-
-  OpenShiftMasterInternalELBDNSName:
-    Type: String
-
-  OpenShiftMasterInternalELB:
-    Type: String
-
-  OpenShiftMasterInternalELBTargetGroup:
-    Type: String
-
-  ContainerAccessELB:
-    Type: String
-
-  ContainerAccessELBDNSName:
-    Type: String
+    NoEcho: true
 
   RegistryBucket:
+    Description: The S3 Bucket name for the OpenShift Image Registry
     Type: String
 
   RegistryBucketArn:
+    Description: The S3 Bucket ARN for the OpenShift Image Registry
+    Type: String
+
+  PublicSubnet1ID:
+    Description: ID of public subnet 1 in Availability Zone 1 for the ELB load balancer
+      (e.g., subnet-9bc642ac)
+    Type: String
+  PublicSubnet2ID:
+    Description: ID of public subnet 2 in Availability Zone 2 for the ELB load balancer
+      (e.g., subnet-e3246d8e)
+    Type: String
+  PublicSubnet3ID:
+    Description: ID of public subnet 3 in Availability Zone 3 for the ELB load balancer
+      (e.g., subnet-e324ad8e)
     Type: String
 
 Resources:
 
+  OpenShiftPasswordSecret:
+    Type: "AWS::SecretsManager::Secret"
+    Properties:
+      SecretString: !Ref OpenShiftAdminPassword
+  #
+  # Creates a Load balancer layer for the cluster
+  #
+  LoadBalancerStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift3/os3-loadbalancer.template'
+      Parameters:
+        VPCID: !Ref VPCID
+        VPCCIDR: !Ref 'VPCCIDR'
+        HostedZoneID: !Ref HostedZoneID
+        DomainName: !Join
+          - ''
+          - - !If
+              - SetupSubdomain
+              - !Sub '${SubDomainPrefix}.'
+              - ''
+            - !Ref 'DomainName'
+        PrivateSubnet1ID: !Ref PrivateSubnet1ID
+        PrivateSubnet2ID: !Ref PrivateSubnet2ID
+        PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        PublicSubnet1ID: !Ref PublicSubnet1ID
+        PublicSubnet2ID: !Ref PublicSubnet2ID
+        PublicSubnet3ID: !Ref PublicSubnet3ID
+        RemoteAccessCIDR: !Ref RemoteAccessCIDR
+        ContainerAccessCIDR: !Ref ContainerAccessCIDR
+        Protocol: !If
+          - UseCustomDomain
+          - SSL
+          - TCP
+        AvailabilityZones: !Join
+          - ","
+          - !Ref AvailabilityZones
+        NumberOfAZs: 3
+        ClusterName: !Ref ClusterName
+        SSLCertificateId: !Ref CertificateArn
+
   #
   # For OpenShift 3, sets up IAM instance profile and IAM role
   #
-
   OpenShiftRole:
     Type: AWS::IAM::Role
     Properties:
@@ -827,7 +942,7 @@ Resources:
       IamInstanceProfile: !Ref OpenShiftRoleProfile
       InstanceType: !Ref 'GlusterInstanceType'
       SecurityGroups:
-        - !Ref 'OpenShiftSecurityGroup'
+        - !GetAtt LoadBalancerStack.Outputs.OpenShiftSecurityGroup
       UserData: !Base64
         Fn::Sub:
           - |
@@ -911,7 +1026,7 @@ Resources:
       IamInstanceProfile: !Ref OpenShiftRoleProfile
       InstanceType: !Ref 'EtcdInstanceType'
       SecurityGroups:
-        - !Ref 'OpenShiftSecurityGroup'
+        - !GetAtt LoadBalancerStack.Outputs.OpenShiftSecurityGroup
       UserData: !Base64
         Fn::Sub:
           - |
@@ -999,7 +1114,7 @@ Resources:
       IamInstanceProfile: !Ref OpenShiftRoleProfile
       InstanceType: !Ref 'NodesInstanceType'
       SecurityGroups:
-        - !Ref 'OpenShiftSecurityGroup'
+        - !GetAtt LoadBalancerStack.Outputs.OpenShiftSecurityGroup
       UserData: !Base64
         Fn::Sub:
           - |
@@ -1087,7 +1202,7 @@ Resources:
       IamInstanceProfile: !Ref OpenShiftRoleProfile
       InstanceType: !Ref 'MasterInstanceType'
       SecurityGroups:
-        - !Ref 'OpenShiftSecurityGroup'
+        - !GetAtt LoadBalancerStack.Outputs.OpenShiftSecurityGroup
       UserData: !Base64
         Fn::Sub:
           - |
@@ -1109,12 +1224,12 @@ Resources:
             export RH_CREDS_ARN='${RedhatSubscriptionSecret}'
             export OCP_VERSION=${OpenshiftContainerPlatformVersion}
             export LAUNCH_CONFIG=OpenShiftMasterASLaunchConfig
-            export INTERNAL_MASTER_ELBDNSNAME=${OpenShiftMasterInternalELBDNSName}
+            export INTERNAL_MASTER_ELBDNSNAME=${LoadBalancerStack.Outputs.OpenShiftMasterInternalELBDNSName}
             export LOG_GROUP=${OpenShiftLogGroup}
             aws s3 cp ${!QS_S3URI}scripts/bootstrap.sh ./bootstrap.sh
             chmod +x bootstrap.sh
             ./bootstrap.sh || qs_err " bootstrapping failed, see logs for details "
-            echo "$(curl http://169.254.169.254/latest/meta-data/local-ipv4) ${OpenShiftMasterInternalELBDNSName}" >> /etc/hosts
+            echo "$(curl http://169.254.169.254/latest/meta-data/local-ipv4) ${LoadBalancerStack.Outputs.OpenShiftMasterInternalELBDNSName}" >> /etc/hosts
             cfn-signal -e $(qs_status) --stack ${AWS::StackName} --resource OpenShiftMasterASG --region ${AWS::Region}
           -
             S3Region: !If [ GovCloudCondition, s3-us-gov-west-1, s3 ]
@@ -1195,7 +1310,7 @@ Resources:
           AssociatePublicIpAddress: true
           DeviceIndex: '0'
           GroupSet:
-            - !Ref 'OpenShiftSecurityGroup'
+            - !GetAtt LoadBalancerStack.Outputs.OpenShiftSecurityGroup
           SubnetId: !Ref 'AnsibleSubnetID'
       UserData: !Base64
         Fn::Sub:
@@ -1206,12 +1321,12 @@ Resources:
             export GET_ANSIBLE_FROM_GIT=${AnsibleFromGit}
             export OCP_ANSIBLE_RELEASE=${OsbRelease}
             export MASTER_ELBDNSNAME=${LbHostname}
-            export INTERNAL_MASTER_ELBDNSNAME=${OpenShiftMasterInternalELBDNSName}
-            export OPENSHIFTMASTERINTERNALELB=${OpenShiftMasterInternalELB}
-            export OPENSHIFTMASTERINTERNALTGARN=${OpenShiftMasterInternalELBTargetGroup}
             export AWS_REGION=${AWS::Region}
-            export CONTAINERACCESSELB=${ContainerAccessELB}
-            export CONTAINERACCESSELB_DNS=${ContainerAccessELBDNSName}
+            export INTERNAL_MASTER_ELBDNSNAME=${LoadBalancerStack.Outputs.OpenShiftMasterInternalELBDNSName}
+            export OPENSHIFTMASTERINTERNALELB=${LoadBalancerStack.Outputs.OpenShiftMasterInternalELB}
+            export OPENSHIFTMASTERINTERNALTGARN=${LoadBalancerStack.Outputs.OpenShiftMasterInternalELBTargetGroup}
+            export CONTAINERACCESSELB=${LoadBalancerStack.Outputs.ContainerAccessELB}
+            export CONTAINERACCESSELB_DNS=${LoadBalancerStack.Outputs.ContainerAccessELBDNSName}
             export OCP_VERSION=${OpenshiftContainerPlatformVersion}
             export ANSIBLE_VERSION=${AnsibleVersion}
             export RH_USER=${RedhatSubscriptionUserName}
@@ -1255,7 +1370,7 @@ Resources:
             HawkEnable: !If [ EnableHawkular, "True", "False" ]
             OsbRelease: !FindInMap [ OpenshiftVersionMap, !Ref 'OpenshiftContainerPlatformVersion', AnsiblePlaybookGitRepoTag ]
             AnsibleVersion: !FindInMap [ OpenshiftVersionMap, !Ref 'OpenshiftContainerPlatformVersion', AnsibleVersion ]
-            LbHostname: !Ref LoadBalancerHostname
+            LbHostname: !If [ UseCustomDomain, !If [ UseSubdomain, !Sub "${SubDomainPrefix}.${DomainName}", !Ref "DomainName" ], !GetAtt LoadBalancerStack.Outputs.OpenShiftMasterELBDNSName ]
             RegBucket: !Ref RegistryBucket
             SbRole: !If [ EnableAWSServiceBroker, !GetAtt ServiceBrokerStack.Outputs.ServiceBrokerRole, "" ]
             SbTable: !If [ EnableAWSServiceBroker, !GetAtt ServiceBrokerStack.Outputs.ServiceBrokerTable, "" ]
@@ -1318,7 +1433,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       LoadBalancerNames:
-        - !Ref 'ContainerAccessELB'
+        - !GetAtt LoadBalancerStack.Outputs.ContainerAccessELBDNSName
       DesiredCapacity: !Ref 'NumberOfNodes'
       MaxSize: '20'
       MinSize: '1'
@@ -1400,34 +1515,16 @@ Resources:
                 Values:
                   - !Ref 'AnsibleConfigServer'
 
-  OpenShiftScalingCWEventRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - events.amazonaws.com
-            Action: sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: OpenShift-QuickStart-SSM-RunCommand
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Action: ssm:SendCommand
-                Effect: Allow
-                Resource:
-                  - !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${AnsibleConfigServer}'
-                  - !Sub 'arn:aws:ssm:${AWS::Region}::document/AWS-RunShellScript'
 
 Conditions:
-
-  EnableGlusterFS: !Equals
-      - !Ref 'GlusterFS'
-      - Enabled
+  UseSubdomain: !Not
+    - !Equals
+      - !Ref 'SubDomainPrefix'
+      - ''
+  UseCustomDomain: !Not
+    - !Equals
+      - !Ref 'DomainName'
+      - ''
   3AZCondition: !Equals [!Ref NumberOfAZs, 3]
   GovCloudCondition: !Equals
     - !Ref 'AWS::Region'
@@ -1448,6 +1545,20 @@ Conditions:
   EnableHawkular: !Equals
     - !Ref 'HawkularMetrics'
     - Enabled
+
+  SetupSubdomain: !And
+    - !Not
+      - !Equals
+        - !Ref 'SubDomainPrefix'
+        - ''
+    - !Not
+      - !Equals
+        - !Ref 'HostedZoneID'
+        - ''
+    - !Not
+      - !Equals
+        - !Ref 'DomainName'
+        - ''
 
 Rules:
   SubnetsInVPC:
@@ -1516,3 +1627,13 @@ Outputs:
     Description: The EC2 instance that hosts the Ansible config processes
     Value: !Ref AnsibleConfigServer
 
+  ContainerAccessELBName:
+    Description: Use this ELB to expose ports to the internet
+    Value: !GetAtt LoadBalancerStack.Outputs.ContainerAccessELB
+
+  OpenShiftUI:
+    Description: The URL OpenShiftUI
+    Value: !Join
+      - ''
+      - - https://
+        - !If [ UseCustomDomain, !If [ UseSubdomain, !Sub "${SubDomainPrefix}.${DomainName}", !Ref "DomainName" ], !GetAtt LoadBalancerStack.Outputs.OpenShiftMasterELBDNSName ]

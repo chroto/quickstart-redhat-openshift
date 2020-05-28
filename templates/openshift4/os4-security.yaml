@@ -18,8 +18,6 @@ Parameters:
   VpcId:
     Description: The VPC-scoped resources will belong to this VPC.
     Type: AWS::EC2::VPC::Id
-  ContainerAccessCIDR:
-    Type: String
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -68,30 +66,6 @@ Resources:
           CidrIp: !Ref VpcCidr
       VpcId: !Ref VpcId
 
-
-  IngressSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      Tags:
-        - Key: Name
-          Value: !Sub "${InfrastructureName}-ingress-default-sg"
-        - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
-          Value: "owned"
-      GroupDescription: Cluster Worker Security Group
-      SecurityGroupIngress:
-        - IpProtocol: icmp
-          FromPort: 0
-          ToPort: 0
-          CidrIp: !Ref VpcCidr
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: !Ref 'ContainerAccessCIDR'
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: !Ref 'ContainerAccessCIDR'
-      VpcId: !Ref VpcId
 
   WorkerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -271,16 +245,6 @@ Resources:
       ToPort: 32767
       IpProtocol: tcp
 
-  WorkerIngressIngressRouterServices:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !GetAtt WorkerSecurityGroup.GroupId
-      SourceSecurityGroupId: !GetAtt IngressSecurityGroup.GroupId
-      Description: Kubernetes ingress services
-      FromPort: 30000
-      ToPort: 32767
-      IpProtocol: tcp
-
   WorkerIngressWorkerIngressServices:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -364,10 +328,6 @@ Outputs:
   WorkerSecurityGroupId:
     Description: Worker Security Group ID
     Value: !GetAtt WorkerSecurityGroup.GroupId
-
-  IngressSecurityGroupId:
-    Description: Ingress Security Group ID
-    Value: !GetAtt IngressSecurityGroup.GroupId
 
   MasterInstanceProfile:
     Description: Master IAM Instance Profile

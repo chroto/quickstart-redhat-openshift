@@ -2,24 +2,24 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: '(qs-1nltbq5f8) OpenShift, License: Apache 2.0 (Please do not remove)
   April, 6, 2018'
 
+Metadata:
+  ParameterLabels:
+    OpenShiftRoleName:
+      default: OpenShift Role Name
+    OpenShiftRoleArn:
+      default: OpenShift Role ARN
+
 Parameters:
   OpenShiftRoleName:
-    Description: ""
+    Description: The IAM Role used by the OpenShift cluster nodes. Set this so the ServiceBroker IAM policies will be attached
     Type: String
 
   OpenShiftRoleArn:
-    Description: ""
+    Description: The IAM Role ARN used by the OpenShift cluster nodes.
     Type: String
 
-Outputs:
-  ServiceBrokerTable:
-    Value: !Ref ServiceBrokerTable
-  ServiceBrokerRole:
-    Value: !Ref ServiceBrokerRole
-  ServiceBrokerTableArn:
-    Value: !GetAtt ServiceBrokerTable.Arn
-
 Resources:
+
   ServiceBrokerTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
@@ -136,3 +136,15 @@ Resources:
                 - "lambda:*"
                 Resource: "*"
                 Effect: "Allow"
+
+
+Outputs:
+  ServiceBrokerTable:
+    Description: The DynamoDB table that AWS Service Broker uses
+    Value: !Ref ServiceBrokerTable
+  ServiceBrokerRole:
+    Description: The IAM Role name for the Service Broker. OpenShift assumes this role to manage AWS services
+    Value: !Ref ServiceBrokerRole
+  ServiceBrokerTableArn:
+    Description: The DynamoDB table (ARN) that AWS Service Broker uses
+    Value: !GetAtt ServiceBrokerTable.Arn

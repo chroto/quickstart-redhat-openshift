@@ -33,18 +33,6 @@ Parameters:
     Description: The VPC-scoped resources will belong to this VPC.
     Type: AWS::EC2::VPC::Id
 
-  SSLCertificateId:
-    Type: String
-    Description: ''
-  Protocol:
-    Type: String
-    Description: ''
-    AllowedValues:
-      - 'SSL'
-      - 'TCP'
-  IngressSecurityGroupId:
-    Type: String
-
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -98,36 +86,6 @@ Resources:
       Subnets: !Ref PrivateSubnets
       Type: network
 
-  ContainerAccessELB:
-    Type: AWS::ElasticLoadBalancing::LoadBalancer
-    Properties:
-      ConnectionSettings:
-        IdleTimeout: 300
-      CrossZone: true
-      Subnets: !Ref PublicSubnets
-      SecurityGroups:
-        - !Ref 'IngressSecurityGroupId'
-      Listeners:
-        - InstancePort: '443'
-          InstanceProtocol: !Ref Protocol
-          LoadBalancerPort: '443'
-          Protocol: !Ref Protocol
-          SSLCertificateId: !Ref SSLCertificateId
-        - InstancePort: '80'
-          InstanceProtocol: TCP
-          LoadBalancerPort: '80'
-          Protocol: TCP
-      HealthCheck:
-        Target: TCP:22
-        HealthyThreshold: '2'
-        UnhealthyThreshold: '3'
-        Interval: '30'
-        Timeout: '3'
-      Tags:
-        - Key: !Sub 'kubernetes.io/cluster/${InfrastructureName}'
-          Value: owned
-        - Key: "kubernetes.io/service-name"
-          Value: "openshift-ingress/router-default"
 
   IntDns:
     Type: "AWS::Route53::HostedZone"
@@ -143,22 +101,6 @@ Resources:
       VPCs:
         - VPCId: !Ref VpcId
           VPCRegion: !Ref "AWS::Region"
-
-  ExternalContainerIngressServerRecord:
-    Type: AWS::Route53::RecordSetGroup
-    Properties:
-      Comment: Alias record for apps
-      HostedZoneId: !Ref HostedZoneId
-      RecordSets:
-        - Name:
-            !Join [
-              ".",
-              ["*", "apps", !Ref ClusterName, !Join ["", [!Ref HostedZoneName, "."]]],
-            ]
-          Type: A
-          AliasTarget:
-            HostedZoneId: !GetAtt ContainerAccessELB.CanonicalHostedZoneNameID
-            DNSName: !GetAtt ContainerAccessELB.DNSName
 
   ExternalApiServerRecord:
     Type: AWS::Route53::RecordSetGroup

@@ -103,6 +103,9 @@ Parameters:
 
 Resources:
 
+  #
+  # Primary Security Group for all cluster EC2 instances
+  #
   OpenShiftSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -123,6 +126,9 @@ Resources:
         - Key: !Sub 'kubernetes.io/cluster/${ClusterName}'
           Value: owned
 
+  #
+  # Security Group for the Container Access Load Balancer
+  #
   OpenShiftNodeSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -170,6 +176,9 @@ Resources:
         Interval: '30'
         Timeout: '3'
 
+  #
+  # Load Balancer for user traffic to OpenShift applications
+  #
   ContainerAccessELB:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
     Properties:
@@ -204,6 +213,9 @@ Resources:
         - Key: !Sub 'kubernetes.io/cluster/${ClusterName}'
           Value: owned
 
+  #
+  # Internal LoadBalancer for the Master API
+  #
   OpenShiftMasterInternalELB:
     Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
     Properties:
@@ -280,11 +292,11 @@ Conditions:
 Outputs:
 
   OpenShiftMasterInternalELBTargetGroup:
-    Description: OpenShiftMasterInternalELBTargetGroup
+    Description: Internal Load Balancer target group for OpenShift Masters
     Value: !Ref OpenShiftMasterInternalELBTargetGroup  
 
   OpenShiftMasterInternalELB:
-    Description: OpenShiftMasterInternalELB
+    Description: Internal Load Balancer for OpenShift Masters
     Value: !Ref 'OpenShiftMasterInternalELB'
 
   OpenShiftMasterInternalELBDNSName:
@@ -292,7 +304,7 @@ Outputs:
     Value: !GetAtt OpenShiftMasterInternalELB.DNSName
 
   OpenShiftNodeSecurityGroup:
-    Description: OpenShiftNodeSecurityGroup ID
+    Description: Load Balancer Security Group ID
     Value: !Ref OpenShiftNodeSecurityGroup
 
   ContainerAccessELBDNSName:
@@ -304,7 +316,7 @@ Outputs:
     Value: !Ref 'ContainerAccessELB'
 
   OpenShiftMasterELBDNSName:
-    Description: ""
+    Description: Full DNS name for the external Master load balancer
     Value: !GetAtt OpenShiftMasterELB.DNSName
 
   ContainerAccessELBHostedZoneNameID:

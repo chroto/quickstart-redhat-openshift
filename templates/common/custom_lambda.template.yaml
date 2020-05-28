@@ -68,15 +68,18 @@ Parameters:
       will be used for connections from outside the cluster.
     Type: String
     Default: ""
+
   ClusterName:
     Default: ""
     Description: Custom cluster name for kubernetes.io/cluster/ tags, if left blank will use the stackname suffixed with the region
     Type: String
+
   SubDomainPrefix:
     Default: ''
     Description: 'OPTIONAL: Subdomain to use, if left blank DomainName will be used
       without a prefix. If you specify this you must also specify DomainName and HostedZoneID'
     Type: String
+
   HostedZoneID:
     Description: 'OPTIONAL: Route 53 Hosted Zone ID to use. If left blank route 53
       will not be configured and DNS must be setup manually If you specify this you must also specify DomainName'
@@ -85,7 +88,7 @@ Parameters:
     Default: ""
 
   RegistryBucket:
-    Default: ""
+    Description: 'The Name of the S3 Bucket for Image Container Registry'
     Type: String
 
   QSS3BucketName:
@@ -110,9 +113,11 @@ Parameters:
     Type: String
 
   PullSecret:
+    Description: '(Required OS4 Only) The OCP Pull Secret JSON'
     Type: String
 
   LogLevel:
+    Description: 'Log Level to use for the OpenShift4 Installer'
     Default: DEBUG
     AllowedValues:
       - DEBUG
@@ -128,15 +133,15 @@ Resources:
     Properties:
       Tags: []
 
-  StackDirectorLambda:
+  OpenShift4InstallationLambda:
     DependsOn: CopyZips
     Condition: OS4
     Type: AWS::Lambda::Function
     Properties:
-      Description: A Cron Lambda to manage OS4 clusters
+      Description: A Lambda to install, configure, and manage OS4 clusters
       Handler: lambda_handler.handler
       MemorySize: 512
-      Role: !GetAtt StackDirectorRole.Arn
+      Role: !GetAtt OpenShift4InstallationRole.Arn
       Runtime: python3.7
       Timeout: 900
       Environment:
@@ -159,90 +164,12 @@ Resources:
           QSS3BucketName: !Ref QSS3BucketName
           QSS3KeyPrefix: !Ref QSS3KeyPrefix
           SSHKey: !Ref SSHKey
-          AwsAccessKeyId: !Ref OpenShift4ClusterManagerAccessKeys
-          AwsSecretAccessKey: !GetAtt OpenShift4ClusterManagerAccessKeys.SecretAccessKey
       Code:
         S3Bucket: !Ref 'LambdaZipsBucket'
-        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/StackDirector/lambda.zip'
+        S3Key: !Sub '${QSS3KeyPrefix}functions/packages/OpenShift4Installation/lambda.zip'
 
-  OpenShift4ClusterManagerAccessKeys:
-    Type: AWS::IAM::AccessKey
-    Properties:
-      UserName: !Ref OpenShift4ClusterManagerUser
 
-  OpenShift4ClusterManagerUser:
-    Type: AWS::IAM::User
-    Properties:
-      Policies:
-        - PolicyName: stackdirector
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: s3:*
-                Resource:
-                  - !Sub 'arn:aws:s3:::${IgnitionBucketName}/*'
-                  - !Sub 'arn:aws:s3:::${IgnitionBucketName}'
-
-        - PolicyName: DisableValidateCron
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - events:DisableRule
-                Resource:
-                  - !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/${ClusterName}-ValidateEvent"
-
-        - PolicyName: ClusterManagementPermissions05
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Resource: "*"
-                Action:
-                  - ec2:*
-                  - s3:*
-                  - elasticloadbalancing:*
-                  - iam:AddRoleToInstanceProfile
-                  - iam:CreateInstanceProfile
-                  - iam:CreateRole
-                  - iam:DeleteInstanceProfile
-                  - iam:DeleteRole
-                  - iam:DeleteRolePolicy
-                  - iam:Get*
-                  - iam:List*
-                  - iam:PassRole
-                  - iam:PutRolePolicy
-                  - iam:SimulatePrincipalPolicy
-                  - iam:TagRole
-                  - iam:RemoveRoleFromInstanceProfile
-                  - route53:ListTagsForResource
-                  - route53:UpdateHostedZoneComment
-                  - route53:ChangeResourceRecordSets
-                  - route53:ChangeTagsForResource
-                  - route53:CreateHostedZone
-                  - route53:DeleteHostedZone
-                  - route53:GetChange
-                  - route53:GetHostedZone
-                  - route53:ListHostedZones
-                  - route53:ListHostedZonesByName
-                  - route53:ListResourceRecordSets
-                  - autoscaling:DescribeAutoScalingGroups
-                  - tag:GetResources
-                  - iam:CreateAccessKey
-                  - iam:CreateUser
-                  - iam:DeleteAccessKey
-                  - iam:DeleteUser
-                  - iam:DeleteUserPolicy
-                  - iam:GetUserPolicy
-                  - iam:ListAccessKeys
-                  - iam:PutUserPolicy
-                  - iam:TagUser
-                  - iam:GetUserPolicy
-                  - iam:ListAccessKeys
-
-  StackDirectorRole:
+  OpenShift4InstallationRole:
     Condition: OS4
     Type: AWS::IAM::Role
     Properties:
@@ -463,7 +390,7 @@ Resources:
       SourceBucket: !Ref 'QSS3BucketName'
       Prefix: !Ref 'QSS3KeyPrefix'
       Objects:
-        - functions/packages/StackDirector/lambda.zip
+        - functions/packages/OpenShift4Installation/lambda.zip
         - functions/packages/KeyGen/lambda.zip
         - functions/packages/DeleteBucketContents/lambda.zip
         - functions/packages/ACMCert/lambda.zip
@@ -746,10 +673,10 @@ Outputs:
     Description: "The ARN For the DeleteBucketContents custom resource"
     Value: !GetAtt DeleteBucketContentsLambda.Arn
 
-  StackDirectorLambdaArn:
-    Description: "The ARN For the DeleteBucketContents custom resource"
+  OpenShift4InstallationLambdaArn:
+    Description: "The ARN For the OpenShift4 Installer custom resource"
     Condition: OS4
-    Value: !GetAtt StackDirectorLambda.Arn
+    Value: !GetAtt OpenShift4InstallationLambda.Arn
 
   LambdaZipsBucket:
     Description: "The S3 Bucket to store all custom Lambda functions"
