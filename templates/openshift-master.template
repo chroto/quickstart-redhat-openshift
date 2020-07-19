@@ -654,6 +654,15 @@ Resources:
       ServiceToken: !GetAtt CustomLambdaStack.Outputs.DeleteBucketContentsLambdaArn
       Bucket: !Ref 'RegistryBucket'
 
+  # Cleanup Ignition Bucket
+  DeleteIgnitionBucketContents:
+    Condition: OS4
+    Type: Custom::DeleteBucketContents
+    Version: '1.0'
+    Properties:
+      ServiceToken: !GetAtt CustomLambdaStack.Outputs.DeleteBucketContentsLambdaArn
+      Bucket: !GetAtt OpenShift4.Outputs.IgnitionBucket
+
   OpenShiftLogGroup:
     Type: 'AWS::Logs::LogGroup'
     DeletionPolicy: Retain
@@ -717,7 +726,6 @@ Resources:
   # SSL Certificate management
   #
   # Either created through ACM or bring your own ARN
-
   SSLCertificateStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -762,6 +770,7 @@ Resources:
   OpenShift4:
     Type: AWS::CloudFormation::Stack
     Condition: OS4
+    DependsOn: CustomLambdaStack
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4.template'
       Parameters:
@@ -971,7 +980,6 @@ Resources:
 
         # Custom Resource Lambdas
         KeyGenLambdaArn: !GetAtt CustomLambdaStack.Outputs.KeyGenLambdaArn
-        DeleteBucketContentsLambdaArn: !GetAtt CustomLambdaStack.Outputs.DeleteBucketContentsLambdaArn
         UnSubscribeLambdaArn: !GetAtt CustomLambdaStack.Outputs.UnSubscribeLambdaArn
         CleanupPVLambdaArn: !GetAtt CustomLambdaStack.Outputs.CleanupPVLambdaArn
 

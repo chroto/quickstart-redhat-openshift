@@ -704,3 +704,7 @@ Outputs:
   KubeAdminPassword:
     Value: !GetAtt OpenShiftGenerateIgnition.KubeAdminPasswordArn
     Description: Location in AWS Secrets Manager for the Open Shift Admin password
+
+  IgnitionBucket:
+    Value: !Ref IgnitionBucket
+    Description: ARN of the S3 Bucket that holds Ignition files
