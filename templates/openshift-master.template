@@ -276,6 +276,7 @@ Parameters:
       Required for OpenShift v4: The OCP Pull Secret JSON
     Type: String
     NoEcho: 'true'
+    Default: xxxxxxxx
 
   SSHKey:
     Description: The public key to be added to the CoreOS boxes for ssh access.
@@ -387,6 +388,7 @@ Parameters:
     MinLength: '8'
     AllowedPattern: ^[^ \\']+$
     NoEcho: 'true'
+    Default: 'xxxxxxxx'
   RedhatSubscriptionUserName:
     Description: (Required for OS v3) Enter Redhat RHN User Name
     Type: String
@@ -787,7 +789,10 @@ Resources:
           - !Ref OpenshiftContainerPlatformVersion
           -  OpenShiftInstallBinary
         SSHKey: !Ref SSHKey
-        PullSecret: !Ref PullSecret
+        PullSecret: !If
+          - EmptyPullSecret
+          - ""
+          - !Ref PullSecret
         ClusterIngressPrivateKeySecretName: !Ref ClusterIngressPrivateKeySecretName
         ClusterIngressCertificateArn: !Ref ClusterIngressCertificateArn
 
@@ -971,13 +976,22 @@ Resources:
         CleanupPVLambdaArn: !GetAtt CustomLambdaStack.Outputs.CleanupPVLambdaArn
 
         # OpenShift Config
-        OpenShiftAdminPassword: !Ref OpenShiftAdminPassword
+        OpenShiftAdminPassword: !If
+          - EmptyOpenShiftAdminPassword
+          - ""
+          - !Ref OpenShiftAdminPassword
 
         # Monitoring
         HawkularMetrics: !Ref 'HawkularMetrics'
         OpenShiftLogGroup: !Ref OpenShiftLogGroup
 
 Conditions:
+  EmptyPullSecret: !Equals
+    - !Ref PullSecret
+    - xxxxxxxx
+  EmptyOpenShiftAdminPassword: !Equals
+    - !Ref OpenShiftAdminPassword
+    - xxxxxxxx
   CustomClusterName: !Not
     - !Equals
       - !Ref ClusterName

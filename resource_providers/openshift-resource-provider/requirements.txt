@@ -1,2 +1,0 @@
-cloudformation-cli-python-lib==0.0.1
-ruamel.yaml==0.16.10
