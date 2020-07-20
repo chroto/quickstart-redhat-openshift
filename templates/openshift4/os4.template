@@ -21,6 +21,7 @@ Metadata:
           - ContainerAccessCIDR
           - RemoteAccessCIDR
           - HostedZoneID
+          - HostedZoneName
       - Label:
           default: Amazon EC2 Configuration
         Parameters:

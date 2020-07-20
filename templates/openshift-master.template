@@ -37,6 +37,7 @@ Metadata:
           - CertificateArn
           - ClusterIngressPrivateKeySecretName
           - ClusterIngressCertificateArn
+          - EnableSSLCertificateGeneration
       - Label:
           default: Amazon EC2 Configuration
         Parameters:
@@ -202,7 +203,14 @@ Metadata:
         default: Cluster Ingress Private Key Secret Name
       ClusterIngressCertificateArn:
         default: Cluster Ingress Certificate ARN
+      EnableSSLCertificateGeneration:
+        default: Enable SSL Certificate Generation?
 Parameters:
+  EnableSSLCertificateGeneration:
+    Description: Activates automatic SSL Certificate generation through ACM. Uses DNS or Email depending on available options
+    Type: String
+    Default: "yes"
+    AllowedValues: [ "yes", "no" ]
   ClusterIngressPrivateKeySecretName:
     Description: >-
       AWS Secrets Manager name for the SSL Private Key for the Cluster Ingress certificate in ACM.
@@ -720,6 +728,7 @@ Resources:
   # Either created through ACM or bring your own ARN
   SSLCertificateStack:
     Type: AWS::CloudFormation::Stack
+    Condition: EnableSSLGeneration
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/common/ssl_certificate.template'
       Parameters:
@@ -1000,10 +1009,12 @@ Conditions:
     !Or [ !Equals [!Ref OpenshiftContainerPlatformVersion, '4.2'], !Equals [!Ref OpenshiftContainerPlatformVersion, '4.3']]
   OS3: !Equals [!Ref OpenshiftContainerPlatformVersion, '3.11']
 
-  UseCustomDomain: !Not
-    - !Equals
-      - !Ref 'DomainName'
-      - ''
+  UseCustomDomain: !And
+    - !Not
+      - !Equals
+        - !Ref 'DomainName'
+        - ''
+    - Condition: EnableSSLGeneration
 
   UseCustomCertificate: !Not
     - !Equals
@@ -1032,10 +1043,12 @@ Conditions:
       - !Equals
         - !Ref 'DomainName'
         - ''
-
   SetupVPC: !Equals
     - !Ref VPCID
     - ""
+  EnableSSLGeneration: !Equals
+    - !Ref EnableSSLCertificateGeneration
+    - "yes"
 
 Mappings:
 
