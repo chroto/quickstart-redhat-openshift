@@ -142,7 +142,11 @@ def _cleanup_image_registry_bucket(model, session):
                     log.info('[DELETE] Deleting contents of image registry bucket')
                     delete_contents_s3(bucket_name, session)
                     log.info('[DELETE] Deleting image registry bucket')
-                    s3.delete_bucket(Bucket=bucket_name)
+                    try:
+                        s3.meta.client.head_bucket(Bucket=bucket_name)
+                        s3.delete_bucket(Bucket=bucket_name)
+                    except ClientError:
+                        log.warning("[DELETE] Registry bucket does not exist")
         log.info('[DELETE] Image registry bucket successfully deleted')
     else:
         log.info('[DELETE] No Image Registry bucket found')

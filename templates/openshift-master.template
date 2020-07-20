@@ -654,14 +654,6 @@ Resources:
       ServiceToken: !GetAtt CustomLambdaStack.Outputs.DeleteBucketContentsLambdaArn
       Bucket: !Ref 'RegistryBucket'
 
-  # Cleanup Ignition Bucket
-  DeleteIgnitionBucketContents:
-    Condition: OS4
-    Type: Custom::DeleteBucketContents
-    Version: '1.0'
-    Properties:
-      ServiceToken: !GetAtt CustomLambdaStack.Outputs.DeleteBucketContentsLambdaArn
-      Bucket: !GetAtt OpenShift4.Outputs.IgnitionBucket
 
   OpenShiftLogGroup:
     Type: 'AWS::Logs::LogGroup'
