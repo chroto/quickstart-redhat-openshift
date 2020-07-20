@@ -257,6 +257,7 @@ Resources:
 
   ExternalApiServerRecord:
     Type: AWS::Route53::RecordSetGroup
+    Condition: HasExternalDNSZone
     Properties:
       Comment: Alias record for the API server
       HostedZoneId: !Ref HostedZoneID
@@ -762,7 +763,6 @@ Resources:
                 Effect: Allow
                 Resource: '*'
 
-
   RegisterPublicSubnetTags:
     Type: Custom::SubnetRegister
     Properties:
@@ -778,10 +778,13 @@ Resources:
       Subnets: !Ref PrivateSubnets
 
 Conditions:
-
   HasACMCertificate: !Not
     - !Equals
       - !Ref ACMCertificateId
+      - ""
+  HasExternalDNSZone: !Not
+    - !Equals
+      - !Ref HostedZoneID
       - ""
 Outputs:
   PrivateHostedZoneId:
