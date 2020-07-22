@@ -865,15 +865,15 @@ Resources:
           - !GetAtt 'VPCStack.Outputs.VPCID'
           - !Ref VPCID
         SSLCertificateId: !If
-          - UseCustomDomain
+          - UseCustomCertificate
+          - !Ref 'CertificateArn'
           - !If
-            - UseCustomCertificate
-            - !Ref 'CertificateArn'
+            - EnableSSLGeneration
             - !If
               - SetupRoute53
               - !GetAtt SSLCertificateStack.Outputs.ACMCertificateDNSArn
               - !GetAtt SSLCertificateStack.Outputs.ACMCertificateEmail
-          - !Ref AWS::NoValue
+            - !Ref AWS::NoValue
         AvailabilityZones: !Join
           - ","
           - !Ref AvailabilityZones
