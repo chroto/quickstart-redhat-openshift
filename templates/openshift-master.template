@@ -258,7 +258,6 @@ Parameters:
       subnet-b1f4a2cd)
     Type: String
     Default: ""
-
   PublicSubnet1ID:
     Description: >-
       ID of private subnet 1 in Availability Zone 1 for the Workload (e.g.,
@@ -271,21 +270,18 @@ Parameters:
       subnet-b1f432cd)
     Type: String
     Default: ""
-
   PublicSubnet3ID:
     Description: >-
       ID of private subnet 3 in Availability Zone 3 for the Workload (e.g.,
       subnet-b1f4a2cd)
     Type: String
     Default: ""
-
   PullSecret:
     Description: >-
       Required for OpenShift v4: The OCP Pull Secret JSON
     Type: String
     NoEcho: 'true'
     Default: xxxxxxxx
-
   SSHKey:
     Description: The public key to be added to the CoreOS boxes for ssh access.
     Default: ""
@@ -643,15 +639,12 @@ Parameters:
     Description: Enable the Cluster Console
     Type: String
     AllowedValues: [ Enabled, Disabled ]
-
 Resources:
-
   #
   # Generates an S3 Bucket for OpenShift to back its container image registry
   #
   RegistryBucket:
     Type: AWS::S3::Bucket
-
   #
   # This will clean up the contents of the Image Registry Bucket so CloudFormation can delete it
   #
@@ -661,15 +654,12 @@ Resources:
     Properties:
       ServiceToken: !GetAtt CustomLambdaStack.Outputs.DeleteBucketContentsLambdaArn
       Bucket: !Ref 'RegistryBucket'
-
-
   OpenShiftLogGroup:
     Type: 'AWS::Logs::LogGroup'
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
       RetentionInDays: 7
-
   #
   # Creates the DNS Zone and subdomain (if required)
   #
@@ -720,8 +710,6 @@ Resources:
           - !Ref AWS::NoValue
         PublicSubnetTag3: "kubernetes.io/role/elb="
         VPCCIDR: !Ref 'VPCCIDR'
-
-
   #
   # SSL Certificate management
   #
@@ -745,7 +733,6 @@ Resources:
         CertificateArn: !Ref CertificateArn
         DomainName: !Ref DomainName
         SubDomainPrefix: !Ref SubDomainPrefix
-
   #
   # Custom Resource definitions
   #
@@ -805,19 +792,15 @@ Resources:
           - !Ref PullSecret
         ClusterIngressPrivateKeySecretName: !Ref ClusterIngressPrivateKeySecretName
         ClusterIngressCertificateArn: !Ref ClusterIngressCertificateArn
-
         MasterInstanceProfileName: !Ref MasterInstanceProfileName
         WorkerInstanceProfileName: !Ref WorkerInstanceProfileName
-
         NumberOfNodes: !Ref NumberOfNodes
-
         MasterInstanceType: !Ref 'MasterInstanceType'
         NodesInstanceType: !Ref 'NodesInstanceType'
         ClusterName: !If
         - CustomClusterName
         - !Ref ClusterName
         - !Sub '${AWS::StackName}-${AWS::Region}'
-
         # Network Configuration
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         ContainerAccessCIDR: !Ref ContainerAccessCIDR
@@ -899,7 +882,6 @@ Resources:
         RedhatSubscriptionUserName: !Ref 'RedhatSubscriptionUserName'
         RedhatSubscriptionPassword: !Ref 'RedhatSubscriptionPassword'
         RedhatSubscriptionPoolID: !Ref 'RedhatSubscriptionPoolID'
-
         # Cluster Config
         OpenshiftContainerPlatformVersion: !Ref 'OpenshiftContainerPlatformVersion'
         AmiId: !Ref AmiId
@@ -925,13 +907,11 @@ Resources:
         AWSServiceBroker: !Ref 'AWSServiceBroker'
         RegistryBucket: !Ref RegistryBucket
         RegistryBucketArn: !GetAtt RegistryBucket.Arn
-
         # Network Configuration
         VPCCIDR: !If
           - SetupVPC
           - !GetAtt 'VPCStack.Outputs.VPCCIDR'
           - !Ref VPCCIDR
-
         PrivateSubnet1ID: !If
           - SetupVPC
           - !GetAtt 'VPCStack.Outputs.PrivateSubnet1AID'
@@ -956,7 +936,6 @@ Resources:
           - SetupVPC
           - !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
           - !Ref PublicSubnet1ID
-
         VPCID: !If
           - SetupVPC
           - !GetAtt 'VPCStack.Outputs.VPCID'
@@ -965,7 +944,6 @@ Resources:
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         ContainerAccessCIDR: !Ref ContainerAccessCIDR
         NumberOfAZs: !Ref NumberOfAZs
-
         # DNS / Certificate Config
         DomainName: !Ref DomainName
         CertificateArn: !If
@@ -978,22 +956,18 @@ Resources:
               - !GetAtt SSLCertificateStack.Outputs.ACMCertificateDNSArn
               - !GetAtt SSLCertificateStack.Outputs.ACMCertificateEmail
           - !Ref AWS::NoValue
-
         # Custom Resource Lambdas
         KeyGenLambdaArn: !GetAtt CustomLambdaStack.Outputs.KeyGenLambdaArn
         UnSubscribeLambdaArn: !GetAtt CustomLambdaStack.Outputs.UnSubscribeLambdaArn
         CleanupPVLambdaArn: !GetAtt CustomLambdaStack.Outputs.CleanupPVLambdaArn
-
         # OpenShift Config
         OpenShiftAdminPassword: !If
           - EmptyOpenShiftAdminPassword
           - ""
           - !Ref OpenShiftAdminPassword
-
         # Monitoring
         HawkularMetrics: !Ref 'HawkularMetrics'
         OpenShiftLogGroup: !Ref OpenShiftLogGroup
-
 Conditions:
   EmptyPullSecret: !Equals
     - !Ref PullSecret
@@ -1008,19 +982,16 @@ Conditions:
   OS4:
     !Or [ !Equals [!Ref OpenshiftContainerPlatformVersion, '4.2'], !Equals [!Ref OpenshiftContainerPlatformVersion, '4.3']]
   OS3: !Equals [!Ref OpenshiftContainerPlatformVersion, '3.11']
-
   UseCustomDomain: !And
     - !Not
       - !Equals
         - !Ref 'DomainName'
         - ''
     - Condition: EnableSSLGeneration
-
   UseCustomCertificate: !Not
     - !Equals
       - !Ref 'CertificateArn'
       - ''
-
   SetupRoute53: !And
     - !Not
       - !Equals
@@ -1049,24 +1020,20 @@ Conditions:
   EnableSSLGeneration: !Equals
     - !Ref EnableSSLCertificateGeneration
     - "yes"
-
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 Mappings:
-
   OpenShiftVersion:
     "3.11":
       OpenShiftMirrorURL: ""
       OpenShiftVersionNum: "3"
       OpenShiftInstallBinary: ""
       OpenShiftClientBinary: ""
-
     "4.3":
       OpenShiftMirrorURL:  "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/"
       OpenShiftVersionNum: "4.3.21"
       OpenShiftInstallBinary: "openshift-install"
       OpenShiftClientBinary: "openshift-client"
-
 Outputs:
-
   OpenShiftUI:
     Description: The URL OpenShiftUI
     Value: !If
@@ -1076,7 +1043,6 @@ Outputs:
         - OS4
         - !GetAtt OpenShift4.Outputs.OpenShiftUI
         - ""
-
   ContainerAccessELBName:
     Condition: OS3
     Description: Use this ELB to expose ports to the internet

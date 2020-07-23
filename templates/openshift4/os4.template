@@ -115,17 +115,14 @@ Parameters:
     Description: (Optional) Provide an IAM Instance profile name to use for worker nodes
     Type: String
     Default: ''
-
   HostedZoneName:
     Description: The managed Route53 Zone name
     Type: String
-
   VPCCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
     Description: CIDR block for the VPC
     Type: String
-
   PrivateSubnet1ID:
     Description: ID of private subnet 1 in Availability Zone 1 for the Workload (e.g.,
       subnet-a0246dcd)
@@ -138,7 +135,6 @@ Parameters:
     Description: ID of private subnet 3 in Availability Zone 3 for the Workload (e.g.,
       subnet-b1f4a2cd)
     Type: String
-
   PublicSubnet1ID:
     Description: ID of private subnet 1 in Availability Zone 1 for the Workload (e.g.,
       subnet-a0246dcd)
@@ -151,12 +147,10 @@ Parameters:
     Description: ID of private subnet 3 in Availability Zone 3 for the Workload (e.g.,
       subnet-b1f4a2cd)
     Type: String
-
   NumberOfNodes:
     Default: '3'
     Description: The desired capacity for the OpenShift node instances
     Type: Number
-
   AmiId:
     Description: >-
       OPTIONAL: bring your own AMI. In Enterprise environment, you might
@@ -166,7 +160,6 @@ Parameters:
       If left blank, we'll use the base RHEL image from your region.
     Type: String
     Default: ""
-
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase
@@ -196,12 +189,10 @@ Parameters:
   VPCID:
     Description: ID of your existing VPC for deployment
     Type: AWS::EC2::VPC::Id
-
   PullSecret:
     Description: 'The OCP Pull Secret JSON'
     Type: String
     NoEcho: 'true'
-
   EnableBootstrap:
     Type: String
     Description: Allows users to use CloudFormation to clean up the Bootstrap server. When the cluster is first created,
@@ -211,7 +202,6 @@ Parameters:
       - 'yes'
       - 'no'
     Default: 'yes'
-
   MasterInstanceType:
     Default: m5.xlarge
     AllowedValues:
@@ -290,36 +280,30 @@ Parameters:
     ConstraintDescription: Must contain valid instance type
     Description: Type of EC2 instance for the Node instances
     Type: String
-
   ClusterName:
     Default: ""
     Description: Custom cluster name for kubernetes.io/cluster/ tags, if left blank will use the stackname suffixed with the region
     Type: String
-
   AvailabilityZones:
     Description: Comma-delimited list of Availability Zones to use
     Type: String
-
   RemoteAccessCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
     Description: The CIDR IP range that is permitted to access the instances We recommend
       that you set this value to a trusted IP range.
     Type: String
-
   ContainerAccessCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/x
     Description: The CIDR IP range that is permitted to access the instances We recommend
       that you set this value to a trusted IP range.
     Type: String
-
   HostedZoneID:
     Description: 'OPTIONAL: Route 53 Hosted Zone ID to use. If left blank route 53
       will not be configured and DNS must be setup manually If you specify this you must also specify DomainName'
     Type: String
     Default: ""
-
   ClusterIngressPrivateKeySecretName:
     Description: AWS Secrets Manager name for the SSL Private Key for the certificate in ACM. If provided, Quickstart will load your Certificate and Key into the OpenShift cluster.
     Type: String
@@ -332,7 +316,6 @@ Parameters:
     Type: String
     Description: (Optional) The AWS ACM SSL Certificate ARN to use for LoadBalancer configuration
     Default: ''
-
   LogLevel:
     Description: 'Log Level to use for the OpenShift4 Installer'
     Default: DEBUG
@@ -360,15 +343,12 @@ Parameters:
     Description: The public key to be added to the CoreOS boxes for ssh access.
     Default: ""
     Type: String
-
 Resources:
-
   #
   # Create an S3 Bucket for storing Cluster startup files (bootstrap.ign, master.ign, worker.ign)
   #
   IgnitionBucket:
     Type: AWS::S3::Bucket
-
   #
   # OpenShift4 requires valid AWS Access Keys at installation time.
   #
@@ -379,12 +359,10 @@ Resources:
     Type: AWS::IAM::AccessKey
     Properties:
       UserName: !Ref OpenShift4ClusterManagerUser
-
   OpenShift4ClusterManagerUser:
     Type: AWS::IAM::User
     Properties:
       Policies:
-
         - PolicyName: ClusterManagementPermissions
           PolicyDocument:
             Version: '2012-10-17'
@@ -432,7 +410,6 @@ Resources:
                   - iam:TagUser
                   - iam:GetUserPolicy
                   - iam:ListAccessKeys
-
   #
   # Generates OpenShift4 installation configuration and uploads them to the IgnitionBucket
   #
@@ -468,7 +445,6 @@ Resources:
       OpenShiftClientBinary: !Ref OpenShiftClientBinary
       OpenShiftInstallBinary: !Ref OpenShiftInstallBinary
       OpenShiftVersion: !Ref OpenShiftVersion
-
   OpenShiftBootstrap:
     DependsOn: OpenShiftGenerateIgnition
     Type: "AWSQS::OpenShift::Manager"
@@ -480,7 +456,6 @@ Resources:
       CertificateArn: !Ref SSLCertificateId
       ClusterIngressCertificateArn: !Ref ClusterIngressCertificateArn
       ClusterIngressPrivateKeySecretName: !Ref ClusterIngressPrivateKeySecretName
-
   #
   # Sets up Networking
   # - Load Balancers for EXTernal and INTernal API endpoints
@@ -504,8 +479,6 @@ Resources:
         PrivateSubnets: !Join
           - ","
           - [!Ref PrivateSubnet1ID, !Ref PrivateSubnet2ID, !Ref PrivateSubnet3ID]
-
-
   #
   # Generates VPC Security Groups and Cluster IAM Roles
   #
@@ -523,7 +496,6 @@ Resources:
         WorkerInstanceProfileName: !Ref WorkerInstanceProfileName
         ApplicationElbSecurityGroupId: !GetAtt NetworkStack.Outputs.ApplicationElbSecurityGroupId
         ContainerAccessCIDR: !Ref ContainerAccessCIDR
-
   #
   # OpenShift 4 requires an initial 'bootstrap' server to start the cluster. After the cluster starts up, you can safely
   # terminate this instance.
@@ -547,7 +519,6 @@ Resources:
               - !Ref OpenshiftContainerPlatformVersion
               - Value
           - !Ref AmiId
-
         AllowedBootstrapSshCidr: !Ref RemoteAccessCIDR
         PublicSubnet: !Ref PublicSubnet1ID
         BootstrapIgnitionLocation: !Sub s3://${IgnitionBucket}/${ClusterName}/bootstrap.ign
@@ -557,7 +528,6 @@ Resources:
         ExternalApiTargetGroupArn: !GetAtt 'NetworkStack.Outputs.ExternalApiTargetGroupArn'
         InternalApiTargetGroupArn: !GetAtt 'NetworkStack.Outputs.InternalApiTargetGroupArn'
         InternalServiceTargetGroupArn: !GetAtt 'NetworkStack.Outputs.InternalServiceTargetGroupArn'
-
   #
   # Set up the Control Plane (master nodes)
   #
@@ -595,7 +565,6 @@ Resources:
         Master1Subnet: !Ref PrivateSubnet2ID
         Master2Subnet: !Ref PrivateSubnet3ID
         MasterInstanceProfileName: !GetAtt 'SecurityStack.Outputs.MasterInstanceProfile'
-
   #
   # We will need to set up at least 1 worker in order to start up the cluster because certain OpenShift Operators
   # must start up on worker nodes
@@ -622,8 +591,6 @@ Resources:
         Subnet: !Ref PrivateSubnet1ID
         WorkerInstanceProfileName: !GetAtt 'SecurityStack.Outputs.WorkerInstanceProfile'
         WorkerSecurityGroupId: !GetAtt 'SecurityStack.Outputs.WorkerSecurityGroupId'
-
-
 Conditions:
     NoRhcosAmiParameter:
       Fn::Equals:
@@ -694,18 +661,13 @@ Mappings:
       "43": ami-0b03ea038629fd02e
       # No AMI for RHCOS 4.2 in me-south-1
       "42": ''
-
 Outputs:
-
   OpenShiftUI:
     Description: The URL OpenShiftUI
     Value: !Sub "https://console-openshift-console.apps.${ClusterName}.${HostedZoneName}"
-
-
   KubeAdminPassword:
     Value: !GetAtt OpenShiftGenerateIgnition.KubeAdminPasswordArn
     Description: Location in AWS Secrets Manager for the Open Shift Admin password
-
   IgnitionBucket:
     Value: !Ref IgnitionBucket
     Description: ARN of the S3 Bucket that holds Ignition files

@@ -87,6 +87,7 @@ Metadata:
         Parameters:
           - QSS3BucketName
           - QSS3KeyPrefix
+          - QSS3BucketRegion
     ParameterLabels:
       RegistryBucket:
         default: Registry Bucket Name
