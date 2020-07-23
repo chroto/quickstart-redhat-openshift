@@ -99,6 +99,8 @@ Metadata:
         default: SSH Key Name
       AmiId:
         default: AMI ID
+      QSS3BucketRegion:
+        default: Quick Start S3 Bucket Region
       QSS3BucketName:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
@@ -273,6 +275,11 @@ Parameters:
     Description: Name of an existing EC2 key pair. All instances will launch with
       this key pair.
     Type: AWS::EC2::KeyPair::KeyName
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is
+      hosted. When using your own bucket, you must specify this value.
+    Type: String
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase
@@ -560,7 +567,10 @@ Resources:
   LoadBalancerStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift3/os3-loadbalancer.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/openshift3/os3-loadbalancer.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         VPCID: !Ref VPCID
         VPCCIDR: !Ref 'VPCCIDR'
@@ -835,7 +845,10 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: EnableAWSServiceBroker
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/common/service_broker.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/common/service_broker.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         OpenShiftRoleArn: !GetAtt OpenShiftRole.Arn
         OpenShiftRoleName: !Ref OpenShiftRole
@@ -1576,6 +1589,7 @@ Conditions:
       - !Equals
         - !Ref 'DomainName'
         - ''
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 
 Rules:
   SubnetsInVPC:

@@ -92,6 +92,7 @@ Metadata:
         Parameters:
           - QSS3BucketName
           - QSS3KeyPrefix
+          - QSS3BucketRegion
     ParameterLabels:
       MasterInstanceProfileName:
         default: Master IAM Instance Profile Name
@@ -133,6 +134,8 @@ Metadata:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
         default: Quick Start S3 Key Prefix
+      QSS3BucketRegion:
+        default: Quick Start S3 Bucket Region
       RemoteAccessCIDR:
         default: Allowed External Access CIDR (OCP UI)
       ContainerAccessCIDR:
@@ -371,6 +374,11 @@ Parameters:
     Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/).
+    Type: String
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is
+      hosted. When using your own bucket, you must specify this value.
     Type: String
   RemoteAccessCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
@@ -667,12 +675,14 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: SetupSubdomain
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/common/dns.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/common/dns.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         HostedZoneID: !Ref HostedZoneID
         DomainName: !Ref DomainName
         SubDomainPrefix: !Ref SubDomainPrefix
-
   #
   # Creates the VPC Network for the cluster
   #
@@ -680,7 +690,10 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: SetupVPC
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}submodules/quickstart-aws-vpc/templates/aws-vpc.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         AvailabilityZones: !Join [ ',', !Ref 'AvailabilityZones' ]
         NumberOfAZs: '3'
@@ -718,7 +731,10 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: EnableSSLGeneration
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/common/ssl_certificate.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/common/ssl_certificate.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         Route53HostedSubdomainZone: !If
           - SetupSubdomain
@@ -741,31 +757,35 @@ Resources:
   CustomLambdaStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/common/custom_lambda.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/common/custom_lambda.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         HostedZoneID: !Ref HostedZoneID
         Route53HostedSubdomainZone: !If
           - SetupSubdomain
           - !GetAtt DNSZoneStack.Outputs.Route53HostedSubdomainZone
           - !Ref HostedZoneID
-
         DomainName: !Ref DomainName
         SubDomainPrefix: !Ref SubDomainPrefix
         RegistryBucket: !Ref RegistryBucket
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
-
   OpenShift4:
     Type: AWS::CloudFormation::Stack
     Condition: OS4
     DependsOn: CustomLambdaStack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift4/os4.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/openshift4/os4.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         # CloudFormation Meta
         QSS3BucketName: !Ref 'QSS3BucketName'
         QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
-
+        QSS3BucketRegion: !Ref 'QSS3BucketRegion'
         # Cluster Configuration
         OpenshiftContainerPlatformVersion: !Ref 'OpenshiftContainerPlatformVersion'
         AmiId: !Ref AmiId
@@ -860,17 +880,19 @@ Resources:
         AvailabilityZones: !Join
           - ","
           - !Ref AvailabilityZones
-
-
   OpenShift3:
     Type: AWS::CloudFormation::Stack
     Condition: OS3
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift3/os3.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/openshift3/os3.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         # CloudFormation Meta
         QSS3BucketName: !Ref 'QSS3BucketName'
         QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
+        QSS3BucketRegion: !Ref 'QSS3BucketRegion'
         # Cluster Management
         AnsibleStorageSize: '10'
         AnsibleFromGit: !Ref 'AnsibleFromGit'
