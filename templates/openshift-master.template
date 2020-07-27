@@ -847,12 +847,15 @@ Resources:
         PublicSubnet2ID: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
         PublicSubnet1ID: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
         VPCID: !GetAtt 'VPCStack.Outputs.VPCID'
-        AvailabilityZones: !Join [ ',', !Ref 'AvailabilityZones' ]
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         ContainerAccessCIDR: !Ref ContainerAccessCIDR
         NumberOfAZs: !Ref NumberOfAZs
         # DNS / Certificate Config
         DomainName: !Ref DomainName
+        HostedZoneID: !If
+          - SetupSubdomain
+          - !GetAtt DNSZoneStack.Outputs.Route53HostedSubdomainZone
+          - !Ref 'HostedZoneID'
         CertificateArn: !If
           - UseCustomDomain
           - !If

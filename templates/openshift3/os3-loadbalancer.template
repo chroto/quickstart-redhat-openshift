@@ -78,7 +78,6 @@ Parameters:
     Description: ID of public subnet 3 in Availability Zone 3 for the ELB load balancer
       (e.g., subnet-e324ad8e)
     Type: String
-
   SSLCertificateId:
     Type: String
     Description: ''

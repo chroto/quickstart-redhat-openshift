@@ -898,7 +898,6 @@ Resources:
         PublicSubnet2ID: !Ref PublicSubnet2ID
         PublicSubnet1ID: !Ref PublicSubnet1ID
         VPCID: !Ref VPCID
-        AvailabilityZones: !Join [ ',', !Ref 'AvailabilityZones' ]
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         ContainerAccessCIDR: !Ref ContainerAccessCIDR
         NumberOfAZs: !Ref NumberOfAZs
