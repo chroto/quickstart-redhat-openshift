@@ -601,7 +601,11 @@ Resources:
                   if event['RequestType'] == 'Delete':
                       versions = cfn.list_type_versions(Type='RESOURCE', TypeName='AWSQS::OpenShift::Manager')['TypeVersionSummaries']
                       if len(versions) > 1:
-                          cfn.deregister_type(Arn=physical_id)
+                          try:
+                              cfn.deregister_type(Arn=physical_id)
+                          except Exception:
+                              logging.error('Failed to deregister individual version %s. Trying to deregister type.', physical_id)
+                              cfn.deregister_type(Type='RESOURCE', TypeName='AWSQS::OpenShift::Manager')
                       else:
                           cfn.deregister_type(Type='RESOURCE', TypeName='AWSQS::OpenShift::Manager')
               except Exception:
