@@ -7,7 +7,7 @@ Main entry-points for the CloudFormation Resource Provider framework
 
 """
 import logging
-from typing import Any, MutableMapping, Optional, TYPE_CHECKING, Mapping
+from typing import Any, MutableMapping, Optional
 
 from cloudformation_cli_python_lib import (
     Action,
@@ -28,9 +28,6 @@ DEFAULT_MIRROR_URL = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/
 DEFAULT_VERSION = "4.3.21"
 DEFAULT_INSTALL_BINARY = "openshift-install"
 DEFAULT_CLIENT_BINARY = "oc"
-
-if TYPE_CHECKING:
-    import botostubs
 
 # Use this logger to forward log messages to CloudWatch Logs.
 # All loggers in this module inherit from `awsqs_openshift_manager`

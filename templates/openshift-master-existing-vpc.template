@@ -19,6 +19,13 @@ Metadata:
           - RemoteAccessCIDR
           - ContainerAccessCIDR
           - NumberOfAZs
+          - VPCID
+          - PrivateSubnet1ID
+          - PrivateSubnet2ID
+          - PrivateSubnet3ID
+          - PublicSubnet1ID
+          - PublicSubnet2ID
+          - PublicSubnet3ID
       - Label:
           default: DNS Configuration
         Parameters:
@@ -95,6 +102,20 @@ Metadata:
         default: SSH Key Name
       SSHKey:
         default: SSH Public Key
+      VPCID:
+        default: VPC ID
+      PrivateSubnet3ID:
+        default: Private Subnet 3 ID
+      PrivateSubnet2ID:
+        default: Private Subnet 2 ID
+      PrivateSubnet1ID:
+        default: Private Subnet 1 ID
+      PublicSubnet1ID:
+        default: Public Subnet 1 ID
+      PublicSubnet2ID:
+        default: Public Subnet 2 ID
+      PublicSubnet3ID:
+        default: Public Subnet 3 ID
       PrivateSubnet1CIDR:
         default: Private Subnet 1 CIDR
       PrivateSubnet2CIDR:
@@ -216,6 +237,39 @@ Parameters:
       If unprovided, OpenShift will configure a new IAM Instance Profile for you
     Type: String
     Default: ''
+  VPCID:
+    Description: ID of your existing VPC for deployment
+    Type: String
+  PrivateSubnet1ID:
+    Description: >-
+      ID of private subnet 1 in Availability Zone 1 for the Workload (e.g.,
+      subnet-a0246dcd)
+    Type: String
+  PrivateSubnet2ID:
+    Description: >-
+      ID of private subnet 2 in Availability Zone 2 for the Workload (e.g.,
+      subnet-b1f432cd)
+    Type: String
+  PrivateSubnet3ID:
+    Description: >-
+      ID of private subnet 3 in Availability Zone 3 for the Workload (e.g.,
+      subnet-b1f4a2cd)
+    Type: String
+  PublicSubnet1ID:
+    Description: >-
+      ID of private subnet 1 in Availability Zone 1 for the Workload (e.g.,
+      subnet-a0246dcd)
+    Type: String
+  PublicSubnet2ID:
+    Description: >-
+      ID of private subnet 2 in Availability Zone 2 for the Workload (e.g.,
+      subnet-b1f432cd)
+    Type: String
+  PublicSubnet3ID:
+    Description: >-
+      ID of private subnet 3 in Availability Zone 3 for the Workload (e.g.,
+      subnet-b1f4a2cd)
+    Type: String
   PullSecret:
     Description: >-
       Required for OpenShift v4: The OCP Pull Secret JSON
@@ -760,7 +814,7 @@ Resources:
         # Network Configuration
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         ContainerAccessCIDR: !Ref ContainerAccessCIDR
-        VPCCIDR: !GetAtt 'VPCStack.Outputs.VPCCIDR'
+        VPCCIDR: !Ref VPCCIDR
         HostedZoneName: !Join
           - ''
           - - !If
@@ -768,17 +822,14 @@ Resources:
               - !Sub '${SubDomainPrefix}.'
               - ''
             - !Ref 'DomainName'
-        HostedZoneID: !If
-          - SetupSubdomain
-          - !GetAtt DNSZoneStack.Outputs.Route53HostedSubdomainZone
-          - !Ref 'HostedZoneID'
-        PrivateSubnet1ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet1AID'
-        PrivateSubnet2ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet2AID'
-        PrivateSubnet3ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet3AID'
-        PublicSubnet3ID: !GetAtt 'VPCStack.Outputs.PublicSubnet3ID'
-        PublicSubnet2ID: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
-        PublicSubnet1ID: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
-        VPCID: !GetAtt 'VPCStack.Outputs.VPCID'
+        HostedZoneID: !Ref 'HostedZoneID'
+        PrivateSubnet1ID: !Ref PrivateSubnet1ID
+        PrivateSubnet2ID: !Ref PrivateSubnet2ID
+        PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        PublicSubnet3ID: !Ref PublicSubnet3ID
+        PublicSubnet2ID: !Ref PublicSubnet2ID
+        PublicSubnet1ID: !Ref PublicSubnet1ID
+        VPCID: !Ref VPCID
         SSLCertificateId: !If
           - UseCustomCertificate
           - !Ref 'CertificateArn'
@@ -808,7 +859,7 @@ Resources:
         # Cluster Management
         AnsibleStorageSize: '10'
         AnsibleFromGit: !Ref 'AnsibleFromGit'
-        AnsibleSubnetID: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
+        AnsibleSubnetID: !Ref PublicSubnet1ID
         KeyPairName: !Ref 'KeyPairName'
         RedhatSubscriptionUserName: !Ref 'RedhatSubscriptionUserName'
         RedhatSubscriptionPassword: !Ref 'RedhatSubscriptionPassword'
@@ -839,23 +890,19 @@ Resources:
         RegistryBucket: !Ref RegistryBucket
         RegistryBucketArn: !GetAtt RegistryBucket.Arn
         # Network Configuration
-        VPCCIDR: !GetAtt 'VPCStack.Outputs.VPCCIDR'
-        PrivateSubnet1ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet1AID'
-        PrivateSubnet2ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet2AID'
-        PrivateSubnet3ID: !GetAtt 'VPCStack.Outputs.PrivateSubnet3AID'
-        PublicSubnet3ID: !GetAtt 'VPCStack.Outputs.PublicSubnet3ID'
-        PublicSubnet2ID: !GetAtt 'VPCStack.Outputs.PublicSubnet2ID'
-        PublicSubnet1ID: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
-        VPCID: !GetAtt 'VPCStack.Outputs.VPCID'
+        VPCCIDR: !Ref VPCCIDR
+        PrivateSubnet1ID: !Ref PrivateSubnet1ID
+        PrivateSubnet2ID: !Ref PrivateSubnet2ID
+        PrivateSubnet3ID: !Ref PrivateSubnet3ID
+        PublicSubnet3ID: !Ref PublicSubnet3ID
+        PublicSubnet2ID: !Ref PublicSubnet2ID
+        PublicSubnet1ID: !Ref PublicSubnet1ID
+        VPCID: !Ref VPCID
         RemoteAccessCIDR: !Ref RemoteAccessCIDR
         ContainerAccessCIDR: !Ref ContainerAccessCIDR
         NumberOfAZs: !Ref NumberOfAZs
         # DNS / Certificate Config
         DomainName: !Ref DomainName
-        HostedZoneID: !If
-          - SetupSubdomain
-          - !GetAtt DNSZoneStack.Outputs.Route53HostedSubdomainZone
-          - !Ref 'HostedZoneID'
         CertificateArn: !If
           - UseCustomDomain
           - !If

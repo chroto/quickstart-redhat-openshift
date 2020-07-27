@@ -1,6 +1,6 @@
 {
     "StackName": "simple-resource-provider-test",
-    "TemplateBody": "file://simple_ignition_gen.yaml",
+    "TemplateBody": "file://examples/simple_ignition_gen.yaml",
     "Parameters": [
     ],
     "RollbackConfiguration": {

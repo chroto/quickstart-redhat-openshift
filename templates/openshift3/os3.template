@@ -40,7 +40,6 @@ Metadata:
           - AnsibleSubnetID
           - RemoteAccessCIDR
           - ContainerAccessCIDR
-          - AvailabilityZones
           - NumberOfAZs
       - Label:
           default: Amazon EC2 Configuration
@@ -87,17 +86,18 @@ Metadata:
         Parameters:
           - QSS3BucketName
           - QSS3KeyPrefix
+          - QSS3BucketRegion
     ParameterLabels:
       RegistryBucket:
         default: Registry Bucket Name
       RegistryBucketArn:
         default: Registry Bucket ARN
-      AvailabilityZones:
-        default: Availability Zones
       KeyPairName:
         default: SSH Key Name
       AmiId:
         default: AMI ID
+      QSS3BucketRegion:
+        default: Quick Start S3 Bucket Region
       QSS3BucketName:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
@@ -202,11 +202,6 @@ Parameters:
     Description: ID of private subnet 3 in Availability Zone 3 for the Workload (e.g.,
       subnet-b1f4a2cd)
     Type: String
-  AvailabilityZones:
-    Description: List of Availability Zones to use for the subnets in the VPC. Three
-      Availability Zones are used for this deployment, and the logical order of your
-      selections is preserved.
-    Type: List<AWS::EC2::AvailabilityZone::Name>
   VPCCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
@@ -232,8 +227,6 @@ Parameters:
       will not be configured and DNS must be setup manually If you specify this you must also specify DomainName'
     Type: String
     Default: ""
-  OpenShiftMasterELB:
-    Type: String
   KeyGenLambdaArn:
     Description: Lambda ARN for the KeyGen Custom Resource
     Type: String
@@ -272,6 +265,11 @@ Parameters:
     Description: Name of an existing EC2 key pair. All instances will launch with
       this key pair.
     Type: AWS::EC2::KeyPair::KeyName
+  QSS3BucketRegion:
+    Default: 'us-east-1'
+    Description: The AWS Region where the Quick Start S3 bucket (QSS3BucketName) is
+      hosted. When using your own bucket, you must specify this value.
+    Type: String
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase
@@ -559,7 +557,10 @@ Resources:
   LoadBalancerStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/openshift3/os3-loadbalancer.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/openshift3/os3-loadbalancer.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         VPCID: !Ref VPCID
         VPCCIDR: !Ref 'VPCCIDR'
@@ -583,9 +584,6 @@ Resources:
           - UseCustomDomain
           - SSL
           - TCP
-        AvailabilityZones: !Join
-          - ","
-          - !Ref AvailabilityZones
         NumberOfAZs: 3
         ClusterName: !Ref ClusterName
         SSLCertificateId: !Ref CertificateArn
@@ -834,7 +832,10 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Condition: EnableAWSServiceBroker
     Properties:
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/common/service_broker.template'
+      TemplateURL: !Sub
+        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/common/service_broker.template'
+        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         OpenShiftRoleArn: !GetAtt OpenShiftRole.Arn
         OpenShiftRoleName: !Ref OpenShiftRole
@@ -1398,7 +1399,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       LoadBalancerNames:
-        - !Ref 'OpenShiftMasterELB'
+        - !GetAtt 'LoadBalancerStack.Outputs.OpenShiftMasterELB'
       DesiredCapacity: !Ref 'NumberOfMaster'
       MaxSize: !Ref 'NumberOfMaster'
       MinSize: '1'
@@ -1449,7 +1450,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       LoadBalancerNames:
-        - !GetAtt LoadBalancerStack.Outputs.ContainerAccessELBDNSName
+        - !GetAtt LoadBalancerStack.Outputs.ContainerAccessELB
       DesiredCapacity: !Ref 'NumberOfNodes'
       MaxSize: '20'
       MinSize: '1'
@@ -1575,6 +1576,7 @@ Conditions:
       - !Equals
         - !Ref 'DomainName'
         - ''
+  UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 
 Rules:
   SubnetsInVPC:

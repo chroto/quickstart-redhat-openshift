@@ -52,12 +52,13 @@ def handler(event, context):
                         logging.error('timed out waiting for ResourceRecord')
                         status = cfnresponse.FAILED
                     time.sleep(15)
-            rs = [{'Action': 'CREATE', 'ResourceRecordSet': {'Name': r, 'Type': 'CNAME', 'TTL': 600,'ResourceRecords': [{'Value': rs[r]}]}} for r in rs.keys()]
-            try:
-                r53_client.change_resource_record_sets(HostedZoneId=event['ResourceProperties']['HostedZoneId'], ChangeBatch={'Changes': rs})
-            except Exception as e:
-                if 'but it already exists' not in str(e):
-                    raise
+            for r in rs.keys():
+                change = [{'Action': 'CREATE', 'ResourceRecordSet': {'Name': r, 'Type': 'CNAME', 'TTL': 600, 'ResourceRecords': [{'Value': rs[r]}]}}]
+                try:
+                    r53_client.change_resource_record_sets(HostedZoneId=event['ResourceProperties']['HostedZoneId'], ChangeBatch={'Changes': change})
+                except Exception as e:
+                    if 'but it already exists' not in str(e):
+                        raise
             while 'PENDING_VALIDATION' in [v['ValidationStatus'] for v in acm_client.describe_certificate(CertificateArn=arn)['Certificate']['DomainValidationOptions']]:
                 print('waiting for validation to complete')
                 if (context.get_remaining_time_in_millis() / 1000.00) > 20.0:

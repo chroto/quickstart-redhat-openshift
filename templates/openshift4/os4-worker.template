@@ -64,7 +64,6 @@ Parameters:
       - r4.4xlarge
       - r4.8xlarge
       - r4.16xlarge
-
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -99,7 +98,6 @@ Metadata:
         default: "Worker Ignition Source"
       WorkerSecurityGroupId:
         default: "Worker Security Group ID"
-
 Resources:
   Worker0:
     Type: AWS::EC2::Instance
@@ -130,7 +128,6 @@ Resources:
           Value: "owned"
         - Key: Name
           Value: !Sub "${InfrastructureName}-worker-0"
-
 Outputs:
   PrivateIP:
     Description: The compute node private IP address.

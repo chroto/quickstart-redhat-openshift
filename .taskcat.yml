@@ -1,0 +1,69 @@
+project:
+  owner: quickstart-eng@amazon.com
+  name: quickstart-redhat-openshift
+  regions:
+    - eu-central-1
+    - eu-north-1
+    - me-south-1
+    - us-east-1
+    - us-east-2
+    - us-west-2
+  template: templates/openshift-master.template
+  parameters:
+    AvailabilityZones: "$[taskcat_genaz_3]"
+    RemoteAccessCIDR: 10.0.0.0/16
+    ContainerAccessCIDR: 10.0.0.0/16
+    DomainName: ---overridden---
+    HostedZoneID: ---overridden---
+    ClusterName: "$[taskcat_random-string]"
+    QSS3BucketName: $[taskcat_autobucket]
+    QSS3BucketRegion: $[taskcat_current_region]
+  lambda_source_path: functions/source
+  lambda_zip_path: functions/packages
+tests:
+  os4-defaults:
+    parameters:
+      PullSecret: ---overridden---
+    regions:
+      - eu-central-1
+      - eu-north-1
+      - ap-northeast-1
+      - us-east-1
+  os4-existing-vpc:
+    template: templates/openshift-master-existing-vpc.template
+    parameters:
+      PullSecret: ---overridden---
+      VPCID: ---overridden---
+      PublicSubnet1ID: ---overridden---
+      PublicSubnet2ID: ---overridden---
+      PublicSubnet3ID: ---overridden---
+      PrivateSubnet1ID: ---overridden---
+      PrivateSubnet2ID: ---overridden---
+      PrivateSubnet3ID: ---overridden---
+    regions:
+      - us-east-2
+  os4-dns:
+    parameters:
+      SubDomainPrefix: "$[taskcat_random-string]"
+      PullSecret: ---overridden---
+      VPCID: ---overridden---
+      PublicSubnet1ID: ---overridden---
+      PublicSubnet2ID: ---overridden---
+      PublicSubnet3ID: ---overridden---
+      PrivateSubnet1ID: ---overridden---
+      PrivateSubnet2ID: ---overridden---
+      PrivateSubnet3ID: ---overridden---
+    regions:
+      - us-east-2
+  os3-defaults:
+    parameters:
+      OpenshiftContainerPlatformVersion: '3.11'
+      KeyPairName: ---overridden---
+      RedhatSubscriptionUserName: ---overridden---
+      RedhatSubscriptionPassword: ---overridden---
+      RedhatSubscriptionPoolID: ---overridden---
+      OpenShiftAdminPassword: ---overridden---
+    regions:
+      - ap-southeast-2
+      - ap-southeast-1
+      - sa-east-1

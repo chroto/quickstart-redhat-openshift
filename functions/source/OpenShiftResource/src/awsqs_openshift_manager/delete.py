@@ -127,7 +127,7 @@ def _cleanup_image_registry_bucket(model, session):
     :param session: Boto SessionProxy
     :return: True if successful
     """
-    s3 = session.client('s3')
+    s3 = session.resource('s3')
     rg = session.client('resourcegroupstaggingapi')
     response = rg.get_resources(
         TagFilters=[{
@@ -142,7 +142,11 @@ def _cleanup_image_registry_bucket(model, session):
                     log.info('[DELETE] Deleting contents of image registry bucket')
                     delete_contents_s3(bucket_name, session)
                     log.info('[DELETE] Deleting image registry bucket')
-                    s3.delete_bucket(Bucket=bucket_name)
+                    try:
+                        bucket = s3.Bucket(bucket_name)
+                        bucket.delete()
+                    except ClientError:
+                        log.warning("[DELETE] Registry bucket does not exist")
         log.info('[DELETE] Image registry bucket successfully deleted')
     else:
         log.info('[DELETE] No Image Registry bucket found')

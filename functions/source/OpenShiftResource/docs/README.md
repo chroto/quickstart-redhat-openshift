@@ -29,8 +29,11 @@ To declare this entity in your AWS CloudFormation template, use the following sy
         "<a href="#hostedzonename" title="HostedZoneName">HostedZoneName</a>" : <i>String</i>,
         "<a href="#availabilityzones" title="AvailabilityZones">AvailabilityZones</a>" : <i>[ String, ... ]</i>,
         "<a href="#subnets" title="Subnets">Subnets</a>" : <i>[ String, ... ]</i>,
+        "<a href="#certificatearn" title="CertificateArn">CertificateArn</a>" : <i>String</i>,
+        "<a href="#clusteringresscertificatearn" title="ClusterIngressCertificateArn">ClusterIngressCertificateArn</a>" : <i>String</i>,
         "<a href="#clusteringressprivatekeysecretname" title="ClusterIngressPrivateKeySecretName">ClusterIngressPrivateKeySecretName</a>" : <i>String</i>,
         "<a href="#infrastructurename" title="InfrastructureName">InfrastructureName</a>" : <i>String</i>,
+        "<a href="#kubeconfig" title="KubeConfig">KubeConfig</a>" : <i>String</i>,
     }
 }
 </pre>
@@ -59,8 +62,11 @@ Properties:
       - String</i>
     <a href="#subnets" title="Subnets">Subnets</a>: <i>
       - String</i>
+    <a href="#certificatearn" title="CertificateArn">CertificateArn</a>: <i>String</i>
+    <a href="#clusteringresscertificatearn" title="ClusterIngressCertificateArn">ClusterIngressCertificateArn</a>: <i>String</i>
     <a href="#clusteringressprivatekeysecretname" title="ClusterIngressPrivateKeySecretName">ClusterIngressPrivateKeySecretName</a>: <i>String</i>
     <a href="#infrastructurename" title="InfrastructureName">InfrastructureName</a>: <i>String</i>
+    <a href="#kubeconfig" title="KubeConfig">KubeConfig</a>: <i>String</i>
 </pre>
 
 ## Properties
@@ -241,6 +247,26 @@ _Type_: List of String
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
+#### CertificateArn
+
+_Required_: No
+
+_Type_: String
+
+_Pattern_: <code>^arn:aws(-(cn|gov))?:[a-z-]+:(([a-z]+-)+[0-9])?:([0-9]{12})?:[^.]+$</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### ClusterIngressCertificateArn
+
+_Required_: No
+
+_Type_: String
+
+_Pattern_: <code>^arn:aws(-(cn|gov))?:[a-z-]+:(([a-z]+-)+[0-9])?:([0-9]{12})?:[^.]+$</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
 #### ClusterIngressPrivateKeySecretName
 
 The AWS Secrets Manager name identifier for the private key used to sign ClusterIngressCertificateArn. The Secret String must be PEM encoded
@@ -260,6 +286,16 @@ _Required_: No
 _Type_: String
 
 _Pattern_: <code>^[a-zA-Z0-9_-]+$</code>
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### KubeConfig
+
+_Required_: No
+
+_Type_: String
+
+_Pattern_: <code>^arn:aws(-(cn|gov))?:[a-z-]+:(([a-z]+-)+[0-9])?:([0-9]{12})?:[^.]+$</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 

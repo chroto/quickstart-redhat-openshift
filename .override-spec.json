@@ -1,0 +1,131 @@
+{
+  "ResourceTypes": {
+    "AWSQS::OpenShift::Manager": {
+      "Attributes": {
+        "KubeAdminPasswordArn" : {
+          "PrimitiveType": "String"
+        },
+        "InfrastructureId": {
+          "PrimitiveType": "String"
+        },
+        "KubeConfigArn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "LogLevel": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "Action": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "WorkerNodeSize": {
+          "Required": false,
+          "PrimitiveType": "Integer",
+          "UpdateType": "Mutable"
+        },
+        "ClusterName": {
+          "Required": true,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "OpenShiftMirrorURL": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "OpenShiftVersion": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "OpenShiftClientBinary": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "OpenShiftInstallBinary": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "IgnitionBucket": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "PullSecret": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "SSHKey": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "AwsAccessKeyId": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "AwsSecretAccessKey": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "WorkerInstanceProfileName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "HostedZoneName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "AvailabilityZones": {
+          "PrimitiveItemType": "String",
+          "Type": "List",
+          "UpdateType": "Mutable",
+          "Required": false
+        },
+        "Subnets": {
+          "PrimitiveItemType": "String",
+          "Type": "List",
+          "UpdateType": "Mutable",
+          "Required": false
+        },
+        "CertificateArn": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "ClusterIngressCertificateArn": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "ClusterIngressPrivateKeySecretName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "InfrastructureName": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        },
+        "KubeConfig": {
+          "Required": false,
+          "PrimitiveType": "String",
+          "UpdateType": "Mutable"
+        }
+      }
+    }
+  }
+}
