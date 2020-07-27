@@ -1,6 +1,6 @@
 # Development notes for OpenShift4 Quick Start
 
-Features:
+Features and Changes:
 - Adds Resource Provider: `AWSQS::OpenShift::Manager`
 - Adds support for OpenShift 4.x installation
 - Backwards compatible with previous 3.x installations
@@ -10,6 +10,8 @@ Features:
 - BYO IAM Roles for Worker and Control Plane nodes
 - Installation Logs and Metrics delivered to AWS CloudWatch
 - KubeConfig is stored in Secrets Manager to help integrate w/ AWSQS::Kubernetes::Helm
+- Removed CI directory in favor of .taskcat.yml file in order to match patterns from other Quickstart projects
+- Split existing /non-existing VPC paths into two separate master templates
 
 # Live Demo
 
