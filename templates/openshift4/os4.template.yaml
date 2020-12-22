@@ -188,11 +188,12 @@ Parameters:
     Type: String
   OpenshiftContainerPlatformVersion:
     Description: OpenShift version to deploy
-    Default: '4.3'
+    Default: '4.6'
     Type: String
     AllowedValues:
       - '4.3'
       - '4.5'
+      - '4.6'
   VPCID:
     Description: ID of your existing VPC for deployment
     Type: AWS::EC2::VPC::Id
@@ -630,6 +631,8 @@ Mappings:
       Value: '43'
     '4.5':
       Value: '45'
+    '4.6':
+      Value: '46'
   RhcosAmiMap:
     # 4.2  - rhcos-42.80.20191002.0-hvm
     # 4.3  - rhcos-43.81.202001142154.0-hvm
@@ -637,70 +640,88 @@ Mappings:
       "42": ami-01e7fdcb66157b224
       "43": ami-06f85a7940faa3217
       "45": ami-077ede5bed2e431ea
+      "46": ami-009cbe327d180d666
     us-east-2:
       "42": ami-0bc59aaa7363b805d
       "43": ami-04a79d8d7cfa540cc
       "45": ami-0f4ecf819275850dd
+      "46": ami-0346f64579665ce3c
     us-west-1:
       "42": ami-0ba912f53c1fdcdf0
       "43": ami-0633b392e8eff25e7
       "45": ami-0c4990e435bc6c5fe
+      "46": ami-07c185c787029b522
     us-west-2:
       "42": ami-08e10b201e19fd5e7
       "43": ami-0d231993dddc5cd2e
       "45": ami-000d6e92357ac605c
+      "46": ami-01105d480bb47353f
     sa-east-1:
       "42": ami-03f6b71e93e630dab
       "43": ami-0c80d785b30eef121
       "45": ami-08e62f746b94950c1
+      "46": ami-081f13881a31af160
     eu-west-3:
       "42": ami-058ad17da14ff4d0d9
       "43": ami-0049e16104f360df6
       "45": ami-0e817e26f638a71ac
+      "46": ami-083f281d2864a71de
     eu-west-2:
       "42": ami-00c74e593125e0096
       "43": ami-0eef98c447b85ffcd
       "45": ami-0e610e967a62dbdfa
+      "46": ami-0291fd4543d6940f4
     eu-west-1:
       "42": ami-04370efd78434697b
       "43": ami-0e95125b57fa63b0d
       "45": ami-0bdd69d8e7cd18188
+      "46": ami-0e514a30ad261c978
     eu-north-1:
       "42": ami-0175e9c9d258cc11d
       "43": ami-06b7087b2768f644a
+      "45": ami-0309c9d2fadcb2d5a
+      "46": ami-06d01bfaf14ad66a3
     eu-central-1:
       "42": ami-092b69120ecf915ed
       "43": ami-0ceea534b63224411
       "45": ami-0309c9d2fadcb2d5a
+      "46": ami-0a51f61236e6fc6f2
     ca-central-1:
       "42": ami-04419691da69850cf
       "43": ami-0f6d943a1fa9172fd
       "45": ami-012bc4ee3b6c673bc
+      "46": ami-0f5825ef10c76de32
     ap-southeast-2:
       "42": ami-0391e92574fb09e08
       "43": ami-08929f33bfab49b83
       "45": ami-0a5b99ab2234a4e6a
+      "46": ami-0e3e2b2ea00c35823
     ap-southeast-1:
       "42": ami-0d76ac0ebaac29e40
       "43": ami-086b93722336bd1d9
       "45": ami-03b46cc4b1518c5a8
+      "46": ami-0a6a0f1f6106708c4
     ap-south-1:
       "42": ami-0bd772ba746948d9a
       "43": ami-0bf62e963a473068e
       "45": ami-0754b15d212830477
+      "46": ami-09253ba33f828d47f
     ap-northeast-2:
       "42": ami-014514ae47679721b
       "43": ami-0ba4f9a0358bcb44a
       "45": ami-09e4cd700276785d2
+      "46": ami-01e554d608de6087a
     ap-northeast-1:
       "42": ami-0426ca3481a088c7b
       "43": ami-023d0452866845125
       "45": ami-0530d04240177f118
+      "46": ami-0cb46ba6945dbfebe
     me-south-1:
       "43": ami-0b03ea038629fd02e
       # No AMI for RHCOS 4.2 in me-south-1
       "42": ''
       "45": ami-024117d7c87b7ff08
+      "46": ami-05a6ae5eadb5b244d
 Outputs:
   OpenShiftUI:
     Description: The URL OpenShiftUI
