@@ -50,6 +50,14 @@ Parameters:
   InternalServiceTargetGroupArn:
     Description: ARN for internal service load balancer target group.
     Type: String
+  OpenshiftContainerPlatformVersion:
+    Description: OpenShift version to deploy
+    Default: '4.6'
+    Type: String
+    AllowedValues:
+      - '4.3'
+      - '4.5'
+      - '4.6'
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -58,6 +66,7 @@ Metadata:
           default: "Cluster Information"
         Parameters:
           - InfrastructureName
+          - OpenshiftContainerPlatformVersion
       - Label:
           default: "Host Information"
         Parameters:
@@ -95,10 +104,15 @@ Metadata:
         default: "Master Security Group ID"
       AutoRegisterELB:
         default: "Use Provided ELB Automation"
-
+      OpenshiftContainerPlatformVersion:
+        default: Openshift Container Platform Version
 Conditions:
   DoRegistration: !Equals ["yes", !Ref AutoRegisterELB]
-
+  Version46OrGreater: !Or
+    - !Equals ["4.6", !Ref OpenshiftContainerPlatformVersion ]
+    - !Equals ["4.7", !Ref OpenshiftContainerPlatformVersion ]
+    - !Equals ["4.8", !Ref OpenshiftContainerPlatformVersion ]
+    - !Equals ["4.9", !Ref OpenshiftContainerPlatformVersion ]
 Resources:
   BootstrapIamRole:
     Type: AWS::IAM::Role
@@ -171,13 +185,18 @@ Resources:
             - !Ref "BootstrapSecurityGroup"
             - !Ref "MasterSecurityGroupId"
           SubnetId: !Ref "PublicSubnet"
-      UserData:
-        Fn::Base64: !Sub
-          - '{"ignition":{"config":{"replace":{"source":"${S3Loc}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
-          - {
-            S3Loc: !Ref BootstrapIgnitionLocation
-          }
-
+      UserData: !If
+        - Version46OrGreater
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"replace":{"source":"${S3Loc}"}},"version":"3.1.0"}}'
+            - {
+                S3Loc: !Ref BootstrapIgnitionLocation
+            }
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"replace":{"source":"${S3Loc}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
+            - {
+              S3Loc: !Ref BootstrapIgnitionLocation
+            }
   RegisterBootstrapApiTarget:
     Condition: DoRegistration
     Type: Custom::NLBRegister
@@ -185,7 +204,6 @@ Resources:
       ServiceToken: !Ref RegisterNlbIpTargetsLambdaArn
       TargetArn: !Ref ExternalApiTargetGroupArn
       TargetIp: !GetAtt BootstrapInstance.PrivateIp
-
   RegisterBootstrapInternalApiTarget:
     Condition: DoRegistration
     Type: Custom::NLBRegister
@@ -193,7 +211,6 @@ Resources:
       ServiceToken: !Ref RegisterNlbIpTargetsLambdaArn
       TargetArn: !Ref InternalApiTargetGroupArn
       TargetIp: !GetAtt BootstrapInstance.PrivateIp
-
   RegisterBootstrapInternalServiceTarget:
     Condition: DoRegistration
     Type: Custom::NLBRegister
@@ -201,16 +218,13 @@ Resources:
       ServiceToken: !Ref RegisterNlbIpTargetsLambdaArn
       TargetArn: !Ref InternalServiceTargetGroupArn
       TargetIp: !GetAtt BootstrapInstance.PrivateIp
-
 Outputs:
   BootstrapInstanceId:
     Description: Bootstrap Instance ID.
     Value: !Ref BootstrapInstance
-
   BootstrapPublicIp:
     Description: The bootstrap node public IP address.
     Value: !GetAtt BootstrapInstance.PublicIp
-
   BootstrapPrivateIp:
     Description: The bootstrap node private IP address.
     Value: !GetAtt BootstrapInstance.PrivateIp

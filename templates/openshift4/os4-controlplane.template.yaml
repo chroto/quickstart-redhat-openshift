@@ -1,7 +1,14 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Template for OpenShift Cluster Node Launch (EC2 master instances)
-
 Parameters:
+  OpenshiftContainerPlatformVersion:
+    Description: OpenShift version to deploy
+    Default: '4.6'
+    Type: String
+    AllowedValues:
+      - '4.3'
+      - '4.5'
+      - '4.6'
   InfrastructureName:
     AllowedPattern: ^([a-zA-Z][a-zA-Z0-9\-]{0,26})
     MaxLength: 27
@@ -45,7 +52,7 @@ Parameters:
     Description: IAM profile to associate with master nodes.
     Type: String
   MasterInstanceType:
-    Default: m4.xlarge
+    Default: m5.xlarge
     Type: String
     AllowedValues:
       - t3.xlarge
@@ -106,6 +113,7 @@ Metadata:
           default: "Cluster Information"
         Parameters:
           - InfrastructureName
+          - OpenshiftContainerPlatformVersion
       - Label:
           default: "Host Information"
         Parameters:
@@ -161,11 +169,16 @@ Metadata:
         default: "Private Hosted Zone Name"
       PrivateHostedZoneId:
         default: "Private Hosted Zone ID"
-
+      OpenshiftContainerPlatformVersion:
+        default: Openshift Container Platform Version
 Conditions:
   DoRegistration: !Equals ["yes", !Ref AutoRegisterELB]
   DoDns: !Equals ["yes", !Ref AutoRegisterDNS]
-
+  Version46OrGreater: !Or
+    - !Equals ["4.6", !Ref OpenshiftContainerPlatformVersion ]
+    - !Equals ["4.7", !Ref OpenshiftContainerPlatformVersion ]
+    - !Equals ["4.8", !Ref OpenshiftContainerPlatformVersion ]
+    - !Equals ["4.9", !Ref OpenshiftContainerPlatformVersion ]
 Resources:
   Master0:
     Type: AWS::EC2::Instance
@@ -184,12 +197,18 @@ Resources:
           GroupSet:
             - !Ref "MasterSecurityGroupId"
           SubnetId: !Ref "Master0Subnet"
-      UserData:
-        Fn::Base64: !Sub
-          - '{"ignition":{"config":{"replace":{"source":"${SOURCE}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
-          - {
-            SOURCE: !Ref IgnitionLocation
-          }
+      UserData: !If
+        - Version46OrGreater
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"version":"3.1.0"}}'
+            - {
+              SOURCE: !Ref IgnitionLocation
+            }
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"replace":{"source":"${SOURCE}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
+            - {
+              SOURCE: !Ref IgnitionLocation
+            }
       Tags:
         - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
           Value: "owned"
@@ -237,12 +256,18 @@ Resources:
           GroupSet:
             - !Ref "MasterSecurityGroupId"
           SubnetId: !Ref "Master1Subnet"
-      UserData:
-        Fn::Base64: !Sub
-          - '{"ignition":{"config":{"replace":{"source":"${SOURCE}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
-          - {
-            SOURCE: !Ref IgnitionLocation
-          }
+      UserData: !If
+        - Version46OrGreater
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"version":"3.1.0"}}'
+            - {
+              SOURCE: !Ref IgnitionLocation
+            }
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"replace":{"source":"${SOURCE}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
+            - {
+              SOURCE: !Ref IgnitionLocation
+            }
       Tags:
         - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
           Value: "owned"
@@ -290,12 +315,18 @@ Resources:
           GroupSet:
             - !Ref "MasterSecurityGroupId"
           SubnetId: !Ref "Master2Subnet"
-      UserData:
-        Fn::Base64: !Sub
-          - '{"ignition":{"config":{"replace":{"source":"${SOURCE}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
-          - {
-            SOURCE: !Ref IgnitionLocation
-          }
+      UserData: !If
+        - Version46OrGreater
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"version":"3.1.0"}}'
+            - {
+              SOURCE: !Ref IgnitionLocation
+            }
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"replace":{"source":"${SOURCE}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
+            - {
+              SOURCE: !Ref IgnitionLocation
+            }
       Tags:
         - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
           Value: "owned"
