@@ -526,6 +526,7 @@ Resources:
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
         InfrastructureName: !GetAtt 'OpenShiftGenerateIgnition.InfrastructureId'
+        OpenshiftContainerPlatformVersion: !Ref OpenshiftContainerPlatformVersion
         RhcosAmi: !If
           - NoRhcosAmiParameter
           - !FindInMap
@@ -561,6 +562,7 @@ Resources:
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
+        OpenshiftContainerPlatformVersion: !Ref OpenshiftContainerPlatformVersion
         InfrastructureName: !GetAtt 'OpenShiftGenerateIgnition.InfrastructureId'
         MasterInstanceType: !Ref MasterInstanceType
         RhcosAmi: !If
@@ -599,6 +601,7 @@ Resources:
         - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
           S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
       Parameters:
+        OpenshiftContainerPlatformVersion: !Ref OpenshiftContainerPlatformVersion
         InfrastructureName: !GetAtt 'OpenShiftGenerateIgnition.InfrastructureId'
         WorkerInstanceType: !Ref NodesInstanceType
         RhcosAmi: !If

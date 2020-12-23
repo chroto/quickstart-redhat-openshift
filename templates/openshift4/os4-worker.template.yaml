@@ -2,6 +2,14 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Template for OpenShift Cluster Node Launch (EC2 worker instance)
 
 Parameters:
+  OpenshiftContainerPlatformVersion:
+    Description: OpenShift version to deploy
+    Default: '4.6'
+    Type: String
+    AllowedValues:
+      - '4.3'
+      - '4.5'
+      - '4.6'
   InfrastructureName:
     AllowedPattern: ^([a-zA-Z][a-zA-Z0-9\-]{0,26})
     MaxLength: 27
@@ -71,6 +79,7 @@ Metadata:
           default: "Cluster Information"
         Parameters:
           - InfrastructureName
+          - OpenshiftContainerPlatformVersion
       - Label:
           default: "Host Information"
         Parameters:
@@ -98,6 +107,8 @@ Metadata:
         default: "Worker Ignition Source"
       WorkerSecurityGroupId:
         default: "Worker Security Group ID"
+      OpenshiftContainerPlatformVersion:
+        default: Openshift Container Platform Version
 Resources:
   Worker0:
     Type: AWS::EC2::Instance
@@ -116,18 +127,29 @@ Resources:
           GroupSet:
             - !Ref "WorkerSecurityGroupId"
           SubnetId: !Ref "Subnet"
-      UserData:
-        Fn::Base64: !Sub
-          - '{"ignition":{"config":{"replace":{"source":"${SOURCE}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
-          - {
-            SOURCE: !Ref IgnitionLocation,
-            #CA_BUNDLE: !Ref CertificateAuthorities,
-          }
+      UserData: !If
+        - Version46OrGreater
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"version":"3.1.0"}}'
+            - {
+              SOURCE: !Ref IgnitionLocation
+            }
+        - Fn::Base64: !Sub
+            - '{"ignition":{"config":{"replace":{"source":"${SOURCE}","verification":{}}},"timeouts":{},"version":"2.1.0"},"networkd":{},"passwd":{},"storage":{},"systemd":{}}'
+            - {
+              SOURCE: !Ref IgnitionLocation
+            }
       Tags:
         - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
           Value: "owned"
         - Key: Name
           Value: !Sub "${InfrastructureName}-worker-0"
+Conditions:
+  Version46OrGreater: !Or
+    - !Equals ["4.6", !Ref OpenshiftContainerPlatformVersion ]
+    - !Equals ["4.7", !Ref OpenshiftContainerPlatformVersion ]
+    - !Equals ["4.8", !Ref OpenshiftContainerPlatformVersion ]
+    - !Equals ["4.9", !Ref OpenshiftContainerPlatformVersion ]
 Outputs:
   PrivateIP:
     Description: The compute node private IP address.
