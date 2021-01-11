@@ -2,6 +2,7 @@
 Handles DELETE actions for the Resource
 """
 import logging
+import re
 import time
 from typing import Optional, Mapping
 
@@ -12,6 +13,7 @@ from .util import delete_contents_s3
 
 log = logging.getLogger(__name__)
 
+S3_BUCKET_ARN = re.compile(r'^arn:[^:]+:s3:::(?P<bucket>.+)$')
 
 def generate_ignition_delete(model: Optional[ResourceModel], session: Optional[SessionProxy]) -> Mapping:
     """
@@ -138,16 +140,21 @@ def _cleanup_image_registry_bucket(model, session):
         for b in response['ResourceTagMappingList']:
             for t in b['Tags']:
                 if t['Key'] == 'Name' and str(t['Value']).endswith('image-registry'):
-                    bucket_name = str(b['ResourceARN']).lstrip('arn:aws:s3:::')
-                    log.info('[DELETE] Deleting contents of image registry bucket')
-                    delete_contents_s3(bucket_name, session)
-                    log.info('[DELETE] Deleting image registry bucket')
-                    try:
-                        bucket = s3.Bucket(bucket_name)
-                        bucket.delete()
-                    except ClientError:
-                        log.warning("[DELETE] Registry bucket does not exist")
-        log.info('[DELETE] Image registry bucket successfully deleted')
+                    image_registry_bucket_arn = str(b['ResourceARN'])
+                    bucket_name_match = S3_BUCKET_ARN.match(image_registry_bucket_arn)
+                    if bucket_name_match is not None:
+                        bucket_name = bucket_name_match['bucket']
+                        log.info('[DELETE] Deleting contents of image registry bucket')
+                        delete_contents_s3(bucket_name, session)
+                        log.info('[DELETE] Deleting image registry bucket')
+                        try:
+                            bucket = s3.Bucket(bucket_name)
+                            bucket.delete()
+                            log.info('[DELETE] Image registry bucket successfully deleted')
+                        except ClientError:
+                            log.warning("[DELETE] Registry bucket does not exist")
+                    else:
+                        log.warning('[DELETE] Something went wrong parsing Image Registry bucket ARN %s', image_registry_bucket_arn)
     else:
         log.info('[DELETE] No Image Registry bucket found')
     return True
