@@ -642,7 +642,7 @@ Resources:
                     "ec2:DeleteTags",
                     "ec2:CreateTags"
                   ]
-                Resource: "arn:aws:ec2:*:*:subnet/*"
+                Resource: !Sub "arn:${AWS::Partition}:ec2:*:*:subnet/*"
               - Effect: "Allow"
                 Action:
                   [
@@ -752,8 +752,8 @@ Resources:
             Action: sts:AssumeRole
       Path: /
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: Attach-OpenShift-Workers
           PolicyDocument:

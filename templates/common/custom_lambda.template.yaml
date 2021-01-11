@@ -104,7 +104,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
       Path: /
       Policies:
         - PolicyName: lambda-acm
@@ -129,8 +129,8 @@ Resources:
                 Resource:
                   - !If
                     - SetupSubdomain
-                    - !Sub 'arn:aws:route53:::hostedzone/${Route53HostedSubdomainZone}'
-                    - !Sub 'arn:aws:route53:::hostedzone/${HostedZoneID}'
+                    - !Sub 'arn:${AWS::Partition}:route53:::hostedzone/${Route53HostedSubdomainZone}'
+                    - !Sub 'arn:${AWS::Partition}:route53:::hostedzone/${HostedZoneID}'
               - Effect: Allow
                 Action:
                   - logs:FilterLogEvents
@@ -170,7 +170,7 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: arn:aws:logs:*:*:*
+                Resource: !Sub arn:${AWS::Partition}:logs:*:*:*
               - Effect: Allow
                 Action:
                   - cloudformation:DescribeStacks
@@ -284,15 +284,15 @@ Resources:
                 Action:
                   - s3:*
                 Resource:
-                  - !Sub 'arn:aws:s3:::${RegistryBucket}'
-                  - !Sub 'arn:aws:s3:::${RegistryBucket}/*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${RegistryBucket}'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${RegistryBucket}/*'
               - Effect: Allow
                 Action:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource:
-                  - arn:aws:logs:*:*:*
+                  - !Sub arn:${AWS::Partition}:logs:*:*:*
   DeleteBucketContentsLambda:
     DependsOn: CopyZips
     Type: AWS::Lambda::Function
@@ -316,7 +316,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
       Path: /
       Policies:
         - PolicyName: lambda-copier
@@ -327,13 +327,13 @@ Resources:
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${QSS3BucketName}/${QSS3KeyPrefix}*'
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::${LambdaZipsBucket}/${QSS3KeyPrefix}*'
+                  - !Sub 'arn:${AWS::Partition}:s3:::${LambdaZipsBucket}/${QSS3KeyPrefix}*'
   UnSubscribeRole:
     Type: AWS::IAM::Role
     Properties:
@@ -345,7 +345,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
       Path: /
       Policies:
         - PolicyName: lambda-unsubscribe
@@ -373,7 +373,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
       Path: /
       Policies:
         - PolicyName: lambda-cleanuppv
