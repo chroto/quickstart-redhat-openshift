@@ -64,15 +64,15 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Action: [ "s3:GetObject", "s3:ListBucket" ]
-            Resource: [ "arn:aws:s3:::awsservicebroker/templates/*", "arn:aws:s3:::awsservicebroker" ]
+            Resource: [ !Sub "arn:${AWS::Partition}:s3:::awsservicebroker/templates/*", !Sub "arn:${AWS::Partition}:s3:::awsservicebroker" ]
             Effect: "Allow"
           - Action: [ "dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:DeleteItem" ]
             Resource: !GetAtt ServiceBrokerTable.Arn
             Effect: "Allow"
           - Action: [ "ssm:GetParameter", "ssm:GetParameters" ]
             Resource:
-            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/asb-*"
-            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/Asb*"
+            - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/asb-*"
+            - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/Asb*"
             Effect: "Allow"
       Roles:
         - !Ref OpenShiftRoleName
@@ -99,12 +99,12 @@ Resources:
                 - "ssm:GetParameter"
                 - "ssm:GetParameters"
                 Resource:
-                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/asb-*"
-                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/Asb*"
+                - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/asb-*"
+                - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/Asb*"
                 Effect: "Allow"
               - Sid: "AllowCfnToGetTemplates"
                 Action: "s3:GetObject"
-                Resource: "arn:aws:s3:::awsservicebroker/templates/*"
+                Resource: !Sub "arn:${AWS::Partition}:s3:::awsservicebroker/templates/*"
                 Effect: "Allow"
               - Sid: "CloudFormation"
                 Action:
@@ -114,7 +114,7 @@ Resources:
                 - "cloudformation:DescribeStackEvents"
                 - "cloudformation:UpdateStack"
                 - "cloudformation:CancelUpdateStack"
-                Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/aws-service-broker-*/*"
+                Resource: !Sub "arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/aws-service-broker-*/*"
                 Effect: "Allow"
               - Sid: "ServiceClassPermissions"
                 Action:
