@@ -459,13 +459,14 @@ Parameters:
     Type: Number
     Default: 1000
   GlusterStorageType:
-    Default: io1
+    Default: gp3
     Description: EBS volume type to use for storage
     Type: String
     AllowedValues:
       - io1
       - gp2
       - st1
+      - gp3
   GlusterStorageIops:
     Default: 3000
     Description: EBS volume IOPS to allocate (only applicable if io1 has been selected for GlusterStorageType)
@@ -948,7 +949,7 @@ Resources:
         - DeviceName: /dev/xvdb
           Ebs:
             VolumeSize: 110
-            VolumeType: gp2
+            VolumeType: gp3
         - DeviceName: /dev/xvdc
           Ebs:
             VolumeSize: !Ref GlusterStorageSize
@@ -1038,7 +1039,7 @@ Resources:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 80
-            VolumeType: gp2
+            VolumeType: gp3
       InstanceMonitoring: true
       IamInstanceProfile: !Ref OpenShiftRoleProfile
       InstanceType: !Ref 'EtcdInstanceType'
@@ -1122,11 +1123,11 @@ Resources:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 80
-            VolumeType: gp2
+            VolumeType: gp3
         - DeviceName: /dev/xvdb
           Ebs:
             VolumeSize: 110
-            VolumeType: gp2
+            VolumeType: gp3
       InstanceMonitoring: true
       IamInstanceProfile: !Ref OpenShiftRoleProfile
       InstanceType: !Ref 'NodesInstanceType'
@@ -1210,11 +1211,11 @@ Resources:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 80
-            VolumeType: gp2
+            VolumeType: gp3
         - DeviceName: /dev/xvdb
           Ebs:
             VolumeSize: 110
-            VolumeType: gp2
+            VolumeType: gp3
       InstanceMonitoring: true
       IamInstanceProfile: !Ref OpenShiftRoleProfile
       InstanceType: !Ref 'MasterInstanceType'
@@ -1316,7 +1317,7 @@ Resources:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: !Ref 'AnsibleStorageSize'
-            VolumeType: gp2
+            VolumeType: gp3
       IamInstanceProfile: !Ref OpenShiftRoleProfile
       Tags:
         - Key: Name

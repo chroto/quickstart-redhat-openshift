@@ -581,13 +581,14 @@ Parameters:
     Type: Number
     Default: 1000
   GlusterStorageType:
-    Default: io1
+    Default: gp3
     Description: EBS volume type to use for storage
     Type: String
     AllowedValues:
       - io1
       - gp2
       - st1
+      - gp3
   GlusterInstanceType:
     Default: i3.large
     AllowedValues:
