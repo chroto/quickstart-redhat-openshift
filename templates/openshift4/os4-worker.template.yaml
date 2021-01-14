@@ -34,7 +34,7 @@ Parameters:
     Description: IAM profile to associate with master nodes.
     Type: String
   WorkerInstanceType:
-    Default: m4.xlarge
+    Default: m5.xlarge
     Type: String
     AllowedValues:
       - t3.xlarge
@@ -118,7 +118,7 @@ Resources:
         - DeviceName: /dev/xvda
           Ebs:
             VolumeSize: 120
-            VolumeType: "gp2"
+            VolumeType: "gp3"
       IamInstanceProfile: !Ref WorkerInstanceProfileName
       InstanceType: !Ref WorkerInstanceType
       NetworkInterfaces:
