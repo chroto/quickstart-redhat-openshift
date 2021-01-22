@@ -409,7 +409,8 @@ Parameters:
     Description: OpenShift version to deploy
     Default: '4.6'
     Type: String
-    AllowedValues: [ '3.11', '4.3', '4.5', '4.6' ]
+    #AllowedValues: [ '3.11', '4.3', '4.5', '4.6' ] #removing 3.11 and 4.3
+    AllowedValues: [ '4.5', '4.6' ]
   VPCCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
@@ -938,8 +939,9 @@ Conditions:
       - !Ref ClusterName
       - ""
   OS4:
-    !Or [ !Equals [!Ref OpenshiftContainerPlatformVersion, '4.2'], !Equals [!Ref OpenshiftContainerPlatformVersion, '4.3'], !Equals [!Ref OpenshiftContainerPlatformVersion, '4.5'], !Equals [!Ref OpenshiftContainerPlatformVersion, '4.6']]
-  OS3: !Equals [!Ref OpenshiftContainerPlatformVersion, '3.11']
+    #!Or [ !Equals [!Ref OpenshiftContainerPlatformVersion, '4.2'], !Equals [!Ref OpenshiftContainerPlatformVersion, '4.3'], !Equals [!Ref OpenshiftContainerPlatformVersion, '4.5'], !Equals [!Ref OpenshiftContainerPlatformVersion, '4.6']]
+    !Or [ !Equals [!Ref OpenshiftContainerPlatformVersion, '4.5'], !Equals [!Ref OpenshiftContainerPlatformVersion, '4.6']] #removing 3.11 and 4.3
+  #OS3: !Equals [!Ref OpenshiftContainerPlatformVersion, '3.11'] #removing 3.11
   UseCustomDomain: !And
     - !Not
       - !Equals
@@ -978,16 +980,16 @@ Conditions:
   UsingDefaultBucket: !Equals [!Ref QSS3BucketName, 'aws-quickstart']
 Mappings:
   OpenShiftVersion:
-    "3.11":
-      OpenShiftMirrorURL: ""
-      OpenShiftVersionNum: "3"
-      OpenShiftInstallBinary: ""
-      OpenShiftClientBinary: ""
-    "4.3":
-      OpenShiftMirrorURL:  "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/"
-      OpenShiftVersionNum: "4.3.21"
-      OpenShiftInstallBinary: "openshift-install"
-      OpenShiftClientBinary: "openshift-client"
+    #"3.11": #removing 3.11
+      #OpenShiftMirrorURL: ""
+      #OpenShiftVersionNum: "3"
+      #OpenShiftInstallBinary: ""
+      #OpenShiftClientBinary: ""
+    #"4.3": #removing 4.3
+      #OpenShiftMirrorURL:  "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/"
+      #OpenShiftVersionNum: "4.3.21"
+      #OpenShiftInstallBinary: "openshift-install"
+      #OpenShiftClientBinary: "openshift-client"
     "4.5":
       OpenShiftMirrorURL:  "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/"
       OpenShiftVersionNum: "4.5.16"
