@@ -692,27 +692,27 @@ Resources:
         PrivateSubnet1ACIDR: !Ref 'PrivateSubnet1CIDR'
         PrivateSubnet2ACIDR: !Ref 'PrivateSubnet2CIDR'
         PrivateSubnet3ACIDR: !Ref 'PrivateSubnet3CIDR'
-        PrivateSubnetATag2: !If
-          - OS3
-          - !If
-            - CustomClusterName
-            - !Sub "kubernetes.io/cluster/${ClusterName}=owned"
-            - !Sub "kubernetes.io/cluster/${AWS::StackName}-${AWS::Region}=owned"
-          - !Ref AWS::NoValue
-        PrivateSubnetATag3: !If
-          - OS3
-          - "kubernetes.io/role/internal-elb="
-          - !Ref AWS::NoValue
+        # PrivateSubnetATag2: !If
+        #   - OS3
+        #   - !If
+        #     - CustomClusterName
+        #     - !Sub "kubernetes.io/cluster/${ClusterName}=owned"
+        #     - !Sub "kubernetes.io/cluster/${AWS::StackName}-${AWS::Region}=owned"
+        #   - !Ref AWS::NoValue
+        # PrivateSubnetATag3: !If
+        #   - OS3
+        #   - "kubernetes.io/role/internal-elb="
+        #   - !Ref AWS::NoValue
         PublicSubnet1CIDR: !Ref 'PublicSubnet1CIDR'
         PublicSubnet2CIDR: !Ref 'PublicSubnet2CIDR'
         PublicSubnet3CIDR: !Ref 'PublicSubnet3CIDR'
-        PublicSubnetTag2: !If
-          - OS3
-          - !If
-            - CustomClusterName
-            - !Sub "kubernetes.io/cluster/${ClusterName}=owned"
-            - !Sub "kubernetes.io/cluster/${AWS::StackName}-${AWS::Region}=owned"
-          - !Ref AWS::NoValue
+        # PublicSubnetTag2: !If
+        #   - OS3
+        #   - !If
+        #     - CustomClusterName
+        #     - !Sub "kubernetes.io/cluster/${ClusterName}=owned"
+        #     - !Sub "kubernetes.io/cluster/${AWS::StackName}-${AWS::Region}=owned"
+        #   - !Ref AWS::NoValue
         PublicSubnetTag3: "kubernetes.io/role/elb="
         VPCCIDR: !Ref 'VPCCIDR'
   #
@@ -845,88 +845,88 @@ Resources:
         AvailabilityZones: !Join
           - ","
           - !Ref AvailabilityZones
-  OpenShift3:
-    Type: AWS::CloudFormation::Stack
-    Condition: OS3
-    Properties:
-      TemplateURL: !Sub
-        - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/openshift3/os3.template.yaml'
-        - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
-          S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
-      Parameters:
-        # CloudFormation Meta
-        QSS3BucketName: !Ref 'QSS3BucketName'
-        QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
-        QSS3BucketRegion: !Ref 'QSS3BucketRegion'
-        # Cluster Management
-        AnsibleStorageSize: '10'
-        AnsibleFromGit: !Ref 'AnsibleFromGit'
-        AnsibleSubnetID: !Ref PublicSubnet1ID
-        KeyPairName: !Ref 'KeyPairName'
-        RedhatSubscriptionUserName: !Ref 'RedhatSubscriptionUserName'
-        RedhatSubscriptionPassword: !Ref 'RedhatSubscriptionPassword'
-        RedhatSubscriptionPoolID: !Ref 'RedhatSubscriptionPoolID'
-        # Cluster Config
-        OpenshiftContainerPlatformVersion: !Ref 'OpenshiftContainerPlatformVersion'
-        AmiId: !Ref AmiId
-        NumberOfMaster: !Ref NumberOfMaster
-        NumberOfEtcd: !Ref NumberOfEtcd
-        NumberOfNodes: !Ref NumberOfNodes
-        NumberOfGluster: !Ref NumberOfGluster
-        MasterInstanceType: !Ref 'MasterInstanceType'
-        NodesInstanceType: !Ref 'NodesInstanceType'
-        EtcdInstanceType: !Ref 'EtcdInstanceType'
-        ClusterName: !If
-        - CustomClusterName
-        - !Ref ClusterName
-        - !Sub '${AWS::StackName}-${AWS::Region}'
-        GlusterStorageEncrypted: !Ref GlusterStorageEncrypted
-        GlusterStorageIops: !Ref GlusterStorageIops
-        GlusterInstanceType: !Ref GlusterInstanceType
-        GlusterStorageType: !Ref GlusterStorageType
-        GlusterStorageSize: !Ref GlusterStorageSize
-        GlusterFS: !Ref GlusterFS
-        AutomationBroker: !Ref AutomationBroker
-        ClusterConsole: !Ref ClusterConsole
-        AWSServiceBroker: !Ref 'AWSServiceBroker'
-        RegistryBucket: !Ref RegistryBucket
-        RegistryBucketArn: !GetAtt RegistryBucket.Arn
-        # Network Configuration
-        VPCCIDR: !Ref VPCCIDR
-        PrivateSubnet1ID: !Ref PrivateSubnet1ID
-        PrivateSubnet2ID: !Ref PrivateSubnet2ID
-        PrivateSubnet3ID: !Ref PrivateSubnet3ID
-        PublicSubnet3ID: !Ref PublicSubnet3ID
-        PublicSubnet2ID: !Ref PublicSubnet2ID
-        PublicSubnet1ID: !Ref PublicSubnet1ID
-        VPCID: !Ref VPCID
-        RemoteAccessCIDR: !Ref RemoteAccessCIDR
-        ContainerAccessCIDR: !Ref ContainerAccessCIDR
-        NumberOfAZs: !Ref NumberOfAZs
-        # DNS / Certificate Config
-        DomainName: !Ref DomainName
-        CertificateArn: !If
-          - UseCustomDomain
-          - !If
-            - UseCustomCertificate
-            - !Ref 'CertificateArn'
-            - !If
-              - SetupRoute53
-              - !GetAtt SSLCertificateStack.Outputs.ACMCertificateDNSArn
-              - !GetAtt SSLCertificateStack.Outputs.ACMCertificateEmail
-          - !Ref AWS::NoValue
-        # Custom Resource Lambdas
-        KeyGenLambdaArn: !GetAtt CustomLambdaStack.Outputs.KeyGenLambdaArn
-        UnSubscribeLambdaArn: !GetAtt CustomLambdaStack.Outputs.UnSubscribeLambdaArn
-        CleanupPVLambdaArn: !GetAtt CustomLambdaStack.Outputs.CleanupPVLambdaArn
-        # OpenShift Config
-        OpenShiftAdminPassword: !If
-          - EmptyOpenShiftAdminPassword
-          - ""
-          - !Ref OpenShiftAdminPassword
-        # Monitoring
-        HawkularMetrics: !Ref 'HawkularMetrics'
-        OpenShiftLogGroup: !Ref OpenShiftLogGroup
+  # OpenShift3:
+  #   Type: AWS::CloudFormation::Stack
+  #   Condition: OS3
+  #   Properties:
+  #     TemplateURL: !Sub
+  #       - 'https://${S3Bucket}.s3.${S3Region}.${AWS::URLSuffix}/${QSS3KeyPrefix}templates/openshift3/os3.template.yaml'
+  #       - S3Region: !If [UsingDefaultBucket, !Ref 'AWS::Region', !Ref QSS3BucketRegion]
+  #         S3Bucket: !If [UsingDefaultBucket, !Sub '${QSS3BucketName}-${AWS::Region}', !Ref QSS3BucketName]
+  #     Parameters:
+  #       # CloudFormation Meta
+  #       QSS3BucketName: !Ref 'QSS3BucketName'
+  #       QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
+  #       QSS3BucketRegion: !Ref 'QSS3BucketRegion'
+  #       # Cluster Management
+  #       AnsibleStorageSize: '10'
+  #       AnsibleFromGit: !Ref 'AnsibleFromGit'
+  #       AnsibleSubnetID: !Ref PublicSubnet1ID
+  #       KeyPairName: !Ref 'KeyPairName'
+  #       RedhatSubscriptionUserName: !Ref 'RedhatSubscriptionUserName'
+  #       RedhatSubscriptionPassword: !Ref 'RedhatSubscriptionPassword'
+  #       RedhatSubscriptionPoolID: !Ref 'RedhatSubscriptionPoolID'
+  #       # Cluster Config
+  #       OpenshiftContainerPlatformVersion: !Ref 'OpenshiftContainerPlatformVersion'
+  #       AmiId: !Ref AmiId
+  #       NumberOfMaster: !Ref NumberOfMaster
+  #       NumberOfEtcd: !Ref NumberOfEtcd
+  #       NumberOfNodes: !Ref NumberOfNodes
+  #       NumberOfGluster: !Ref NumberOfGluster
+  #       MasterInstanceType: !Ref 'MasterInstanceType'
+  #       NodesInstanceType: !Ref 'NodesInstanceType'
+  #       EtcdInstanceType: !Ref 'EtcdInstanceType'
+  #       ClusterName: !If
+  #       - CustomClusterName
+  #       - !Ref ClusterName
+  #       - !Sub '${AWS::StackName}-${AWS::Region}'
+  #       GlusterStorageEncrypted: !Ref GlusterStorageEncrypted
+  #       GlusterStorageIops: !Ref GlusterStorageIops
+  #       GlusterInstanceType: !Ref GlusterInstanceType
+  #       GlusterStorageType: !Ref GlusterStorageType
+  #       GlusterStorageSize: !Ref GlusterStorageSize
+  #       GlusterFS: !Ref GlusterFS
+  #       AutomationBroker: !Ref AutomationBroker
+  #       ClusterConsole: !Ref ClusterConsole
+  #       AWSServiceBroker: !Ref 'AWSServiceBroker'
+  #       RegistryBucket: !Ref RegistryBucket
+  #       RegistryBucketArn: !GetAtt RegistryBucket.Arn
+  #       # Network Configuration
+  #       VPCCIDR: !Ref VPCCIDR
+  #       PrivateSubnet1ID: !Ref PrivateSubnet1ID
+  #       PrivateSubnet2ID: !Ref PrivateSubnet2ID
+  #       PrivateSubnet3ID: !Ref PrivateSubnet3ID
+  #       PublicSubnet3ID: !Ref PublicSubnet3ID
+  #       PublicSubnet2ID: !Ref PublicSubnet2ID
+  #       PublicSubnet1ID: !Ref PublicSubnet1ID
+  #       VPCID: !Ref VPCID
+  #       RemoteAccessCIDR: !Ref RemoteAccessCIDR
+  #       ContainerAccessCIDR: !Ref ContainerAccessCIDR
+  #       NumberOfAZs: !Ref NumberOfAZs
+  #       # DNS / Certificate Config
+  #       DomainName: !Ref DomainName
+  #       CertificateArn: !If
+  #         - UseCustomDomain
+  #         - !If
+  #           - UseCustomCertificate
+  #           - !Ref 'CertificateArn'
+  #           - !If
+  #             - SetupRoute53
+  #             - !GetAtt SSLCertificateStack.Outputs.ACMCertificateDNSArn
+  #             - !GetAtt SSLCertificateStack.Outputs.ACMCertificateEmail
+  #         - !Ref AWS::NoValue
+  #       # Custom Resource Lambdas
+  #       KeyGenLambdaArn: !GetAtt CustomLambdaStack.Outputs.KeyGenLambdaArn
+  #       UnSubscribeLambdaArn: !GetAtt CustomLambdaStack.Outputs.UnSubscribeLambdaArn
+  #       CleanupPVLambdaArn: !GetAtt CustomLambdaStack.Outputs.CleanupPVLambdaArn
+  #       # OpenShift Config
+  #       OpenShiftAdminPassword: !If
+  #         - EmptyOpenShiftAdminPassword
+  #         - ""
+  #         - !Ref OpenShiftAdminPassword
+  #       # Monitoring
+  #       HawkularMetrics: !Ref 'HawkularMetrics'
+  #       OpenShiftLogGroup: !Ref OpenShiftLogGroup
 Conditions:
   EmptyPullSecret: !Equals
     - !Ref PullSecret
@@ -1004,13 +1004,13 @@ Outputs:
   OpenShiftUI:
     Description: The URL OpenShiftUI
     Value: !If
-      - OS3
-      - !GetAtt OpenShift3.Outputs.OpenShiftUI
-      - !If
-        - OS4
-        - !GetAtt OpenShift4.Outputs.OpenShiftUI
-        - ""
-  ContainerAccessELBName:
-    Condition: OS3
-    Description: Use this ELB to expose ports to the internet
-    Value: !GetAtt OpenShift3.Outputs.ContainerAccessELB
+      # - OS3
+      # - !GetAtt OpenShift3.Outputs.OpenShiftUI
+      #- !If
+      - OS4
+      - !GetAtt OpenShift4.Outputs.OpenShiftUI
+      - ""
+  # ContainerAccessELBName:
+  #   Condition: OS3
+  #   Description: Use this ELB to expose ports to the internet
+  #   Value: !GetAtt OpenShift3.Outputs.ContainerAccessELB
