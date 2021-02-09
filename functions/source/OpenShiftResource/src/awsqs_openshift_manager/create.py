@@ -48,7 +48,8 @@ def generate_ignition_create(model: Optional[ResourceModel], session: Optional[S
         model.AwsAccessKeyId, model.AwsSecretAccessKey,
         certificate_arn=model.CertificateArn,
         worker_instance_profile=model.WorkerInstanceProfileName,
-        worker_node_size=model.WorkerNodeSize
+        worker_node_size=model.WorkerNodeSize,
+        ami_id=model.AmiId
     )
     model.InfrastructureId = model.InfrastructureName
     upload_ignition_files_to_s3(local_folder, model.IgnitionBucket, session)

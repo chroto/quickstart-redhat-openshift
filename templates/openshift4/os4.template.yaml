@@ -453,6 +453,16 @@ Resources:
       OpenShiftClientBinary: !Ref OpenShiftClientBinary
       OpenShiftInstallBinary: !Ref OpenShiftInstallBinary
       OpenShiftVersion: !Ref OpenShiftVersion
+      AmiId: !If
+        - NoRhcosAmiParameter
+        - !FindInMap
+          - RhcosAmiMap
+          - !Ref AWS::Region
+          - !FindInMap
+            - NoDotVersion
+            - !Ref OpenshiftContainerPlatformVersion
+            - Value
+        - !Ref AmiId
   OpenShiftBootstrap:
     DependsOn: OpenShiftGenerateIgnition
     Type: "AWSQS::OpenShift::Manager"

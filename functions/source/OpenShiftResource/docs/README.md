@@ -14,7 +14,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
     "Properties" : {
         "<a href="#loglevel" title="LogLevel">LogLevel</a>" : <i>String</i>,
         "<a href="#action" title="Action">Action</a>" : <i>String</i>,
-        "<a href="#workernodesize" title="WorkerNodeSize">WorkerNodeSize</a>" : <i>Double</i>,
+        "<a href="#workernodesize" title="WorkerNodeSize">WorkerNodeSize</a>" : <i>Integer</i>,
         "<a href="#clustername" title="ClusterName">ClusterName</a>" : <i>String</i>,
         "<a href="#openshiftmirrorurl" title="OpenShiftMirrorURL">OpenShiftMirrorURL</a>" : <i>String</i>,
         "<a href="#openshiftversion" title="OpenShiftVersion">OpenShiftVersion</a>" : <i>String</i>,
@@ -32,6 +32,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
         "<a href="#certificatearn" title="CertificateArn">CertificateArn</a>" : <i>String</i>,
         "<a href="#clusteringresscertificatearn" title="ClusterIngressCertificateArn">ClusterIngressCertificateArn</a>" : <i>String</i>,
         "<a href="#clusteringressprivatekeysecretname" title="ClusterIngressPrivateKeySecretName">ClusterIngressPrivateKeySecretName</a>" : <i>String</i>,
+        "<a href="#amiid" title="AmiId">AmiId</a>" : <i>String</i>,
         "<a href="#infrastructurename" title="InfrastructureName">InfrastructureName</a>" : <i>String</i>,
         "<a href="#kubeconfig" title="KubeConfig">KubeConfig</a>" : <i>String</i>,
     }
@@ -45,7 +46,7 @@ Type: AWSQS::OpenShift::Manager
 Properties:
     <a href="#loglevel" title="LogLevel">LogLevel</a>: <i>String</i>
     <a href="#action" title="Action">Action</a>: <i>String</i>
-    <a href="#workernodesize" title="WorkerNodeSize">WorkerNodeSize</a>: <i>Double</i>
+    <a href="#workernodesize" title="WorkerNodeSize">WorkerNodeSize</a>: <i>Integer</i>
     <a href="#clustername" title="ClusterName">ClusterName</a>: <i>String</i>
     <a href="#openshiftmirrorurl" title="OpenShiftMirrorURL">OpenShiftMirrorURL</a>: <i>String</i>
     <a href="#openshiftversion" title="OpenShiftVersion">OpenShiftVersion</a>: <i>String</i>
@@ -65,6 +66,7 @@ Properties:
     <a href="#certificatearn" title="CertificateArn">CertificateArn</a>: <i>String</i>
     <a href="#clusteringresscertificatearn" title="ClusterIngressCertificateArn">ClusterIngressCertificateArn</a>: <i>String</i>
     <a href="#clusteringressprivatekeysecretname" title="ClusterIngressPrivateKeySecretName">ClusterIngressPrivateKeySecretName</a>: <i>String</i>
+    <a href="#amiid" title="AmiId">AmiId</a>: <i>String</i>
     <a href="#infrastructurename" title="InfrastructureName">InfrastructureName</a>: <i>String</i>
     <a href="#kubeconfig" title="KubeConfig">KubeConfig</a>: <i>String</i>
 </pre>
@@ -101,7 +103,7 @@ The size of the initial worker cluster. This can be resized later
 
 _Required_: No
 
-_Type_: Double
+_Type_: Integer
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
@@ -253,8 +255,6 @@ _Required_: No
 
 _Type_: String
 
-_Pattern_: <code>^arn:aws(-(cn|gov))?:[a-z-]+:(([a-z]+-)+[0-9])?:([0-9]{12})?:[^.]+$</code>
-
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
 #### ClusterIngressCertificateArn
@@ -263,13 +263,21 @@ _Required_: No
 
 _Type_: String
 
-_Pattern_: <code>^arn:aws(-(cn|gov))?:[a-z-]+:(([a-z]+-)+[0-9])?:([0-9]{12})?:[^.]+$</code>
-
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
 #### ClusterIngressPrivateKeySecretName
 
 The AWS Secrets Manager name identifier for the private key used to sign ClusterIngressCertificateArn. The Secret String must be PEM encoded
+
+_Required_: No
+
+_Type_: String
+
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
+
+#### AmiId
+
+The RHCOS AMI to use
 
 _Required_: No
 
@@ -294,8 +302,6 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 _Required_: No
 
 _Type_: String
-
-_Pattern_: <code>^arn:aws(-(cn|gov))?:[a-z-]+:(([a-z]+-)+[0-9])?:([0-9]{12})?:[^.]+$</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
