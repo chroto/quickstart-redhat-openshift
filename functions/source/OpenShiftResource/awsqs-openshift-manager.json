@@ -103,6 +103,10 @@
             "type": "string",
             "description": "The AWS Secrets Manager name identifier for the private key used to sign ClusterIngressCertificateArn. The Secret String must be PEM encoded"
         },
+        "AmiId": {
+            "type": "string",
+            "description": "The RHCOS AMI to use"
+        },
         "InfrastructureName": {
             "description": "The unique identifier for the OpenShift cluster",
             "pattern": "^[a-zA-Z0-9_-]+$",
